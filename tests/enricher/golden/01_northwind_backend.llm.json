@@ -1,0 +1,22 @@
+{
+  "requirements": [
+    {"raw_text": "Go", "importance": "required", "confidence": 0.95},
+    {"raw_text": "Python", "importance": "mentioned", "confidence": 0.8},
+    {"raw_text": "PostgreSQL", "importance": "required", "confidence": 0.9},
+    {"raw_text": "code review", "importance": "required", "confidence": 0.85},
+    {"raw_text": "on-call rotation", "importance": "mentioned", "confidence": 0.7},
+    {"raw_text": "integration tests", "importance": "required", "confidence": 0.8},
+    {"raw_text": "Bachelor's degree in Computer Science or a related technical field", "importance": "required", "confidence": 0.95},
+    {"raw_text": "Java", "importance": "required", "confidence": 0.85},
+    {"raw_text": "C++", "importance": "required", "confidence": 0.85},
+    {"raw_text": "data structures, algorithms, and complexity analysis", "importance": "required", "confidence": 0.95},
+    {"raw_text": "Working knowledge of SQL", "importance": "required", "confidence": 0.9},
+    {"raw_text": "Git", "importance": "required", "confidence": 0.9},
+    {"raw_text": "Strong written communication skills", "importance": "required", "confidence": 0.8},
+    {"raw_text": "Kubernetes", "importance": "preferred", "confidence": 0.85},
+    {"raw_text": "Apache Kafka", "importance": "preferred", "confidence": 0.8},
+    {"raw_text": "distributed systems concepts", "importance": "preferred", "confidence": 0.75},
+    {"raw_text": "Terraform", "importance": "mentioned", "confidence": 0.5},
+    {"raw_text": "Redis", "importance": "mentioned", "confidence": 0.5}
+  ]
+}

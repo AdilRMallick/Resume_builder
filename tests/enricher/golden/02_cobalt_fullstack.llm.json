@@ -1,0 +1,21 @@
+{
+  "requirements": [
+    {"raw_text": "React", "importance": "required", "confidence": 0.95},
+    {"raw_text": "TypeScript", "importance": "required", "confidence": 0.9},
+    {"raw_text": "JavaScript", "importance": "required", "confidence": 0.9},
+    {"raw_text": "REST APIs", "importance": "mentioned", "confidence": 0.7},
+    {"raw_text": "FastAPI", "importance": "mentioned", "confidence": 0.6},
+    {"raw_text": "Python", "importance": "required", "confidence": 0.8},
+    {"raw_text": "pytest", "importance": "mentioned", "confidence": 0.6},
+    {"raw_text": "Playwright", "importance": "mentioned", "confidence": 0.6},
+    {"raw_text": "CI/CD pipeline", "importance": "required", "confidence": 0.7},
+    {"raw_text": "A degree in Computer Science, Human-Computer Interaction, or equivalent practical experience", "importance": "required", "confidence": 0.9},
+    {"raw_text": "hooks and component composition", "importance": "required", "confidence": 0.7},
+    {"raw_text": "Familiarity with HTML and CSS", "importance": "required", "confidence": 0.85},
+    {"raw_text": "Excellent communication skills", "importance": "required", "confidence": 0.85},
+    {"raw_text": "Docker", "importance": "preferred", "confidence": 0.85},
+    {"raw_text": "HL7 or FHIR", "importance": "preferred", "confidence": 0.7},
+    {"raw_text": "PostgreSQL", "importance": "preferred", "confidence": 0.8},
+    {"raw_text": "WCAG compliance", "importance": "preferred", "confidence": 0.6}
+  ]
+}

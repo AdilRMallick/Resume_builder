@@ -1,0 +1,1041 @@
+# Canonical skill taxonomy for the Job Match Engine.
+#
+# This file is the ONLY source of truth for `canonical_skill` and `skill_alias`.
+# Nothing else may create a canonical skill: the resolver writes unmatched text to
+# `skill_alias_candidate`, and the `jme taxonomy approve|promote` commands are the
+# only path from that queue into the taxonomy. Auto-creation causes taxonomy drift
+# within a week and silently breaks every aggregate number.
+#
+# CURATION RULES
+#
+# 1. One node per concept. "Postgres", "PostgreSQL" and "psql" are one node, not three.
+#    Consolidate aggressively: the whole point is that the gap report can count.
+# 2. `is_actionable: false` for anything I cannot close a gap on by building something:
+#    soft skills, industry verticals, degree/credential requirements, and vague
+#    catch-alls like "cloud platforms". The gap report filters on this flag.
+# 3. Aliases are matched on token boundaries after normalization (see
+#    jme/taxonomy/normalize.py), so "go" never matches inside "django" / "mongo" /
+#    "ongoing". Normalization lowercases, maps "&" to "and", drops punctuation, and
+#    PRESERVES "+", "#" and internal/leading "." so c++, c#, .net and node.js survive.
+# 4. There is no stemming. If the plural form appears in job descriptions, list it
+#    explicitly ("microservice" and "microservices"). Stemming is not worth the
+#    false positives ("cs" -> "c").
+# 5. An alias may belong to exactly one skill. The seeder hard-fails on ambiguity;
+#    that is a data bug, not a warning.
+# 6. Short/English-word aliases ("go", "c", "r", "rest", "express", "spring", "node")
+#    are allowed but are backed by the guard phrases in jme/taxonomy/resolver.py,
+#    which mask spans like "go to market", "R&D", "the rest of", "spring 2027".
+#
+# The skill's own name is always added as an alias automatically. Do not list it.
+
+version: 1
+
+skills:
+  # ------------------------------------------------------------------------------
+  # languages
+  # ------------------------------------------------------------------------------
+  - name: Python
+    category: language
+    aliases: [python3, "python 3", cpython, "python programming"]
+
+  - name: Java
+    category: language
+    aliases: ["core java", "java se", "java 8", "java 11", "java 17", "java 21"]
+
+  - name: JavaScript
+    category: language
+    aliases: [js, "java script", ecmascript, es6, "vanilla javascript"]
+
+  - name: TypeScript
+    category: language
+    aliases: [ts, "type script"]
+
+  - name: Go
+    category: language
+    aliases: [golang, "go lang", "go programming language", "the go programming language"]
+
+  - name: C
+    category: language
+    aliases: ["c language", "c programming", "ansi c"]
+
+  - name: C++
+    category: language
+    aliases: [cpp, "c plus plus", "c c++", "c++ c", "c and c++", "modern c++", c++11, c++14, c++17, c++20]
+
+  - name: C#
+    category: language
+    aliases: [csharp, "c sharp"]
+
+  - name: Rust
+    category: language
+    aliases: ["rust lang", rustlang]
+
+  - name: Kotlin
+    category: language
+    aliases: []
+
+  - name: Swift
+    category: language
+    aliases: [swiftui]
+
+  - name: Objective-C
+    category: language
+    aliases: [objc, "obj c"]
+
+  - name: Scala
+    category: language
+    aliases: []
+
+  - name: Ruby
+    category: language
+    aliases: []
+
+  - name: PHP
+    category: language
+    aliases: []
+
+  - name: Perl
+    category: language
+    aliases: []
+
+  - name: R
+    category: language
+    aliases: ["r programming", "r language", "the r language"]
+    notes: Single-letter alias; guarded against "R&D" in the resolver.
+
+  - name: MATLAB
+    category: language
+    aliases: [simulink]
+
+  - name: SQL
+    category: language
+    aliases:
+      [
+        "structured query language",
+        "sql queries",
+        "writing sql",
+        "advanced sql",
+        "ansi sql",
+        "relational databases",
+        "relational database",
+        rdbms,
+      ]
+
+  - name: Bash
+    category: language
+    aliases:
+      [
+        "shell scripting",
+        "shell scripts",
+        "shell script",
+        "bash scripting",
+        "unix shell",
+        "command line",
+        shell,
+        zsh,
+        ksh,
+      ]
+
+  - name: PowerShell
+    category: language
+    aliases: ["power shell"]
+
+  - name: Dart
+    category: language
+    aliases: []
+
+  - name: Haskell
+    category: language
+    aliases: []
+
+  - name: Elixir
+    category: language
+    aliases: [erlang, "elixir erlang", beam]
+
+  - name: Clojure
+    category: language
+    aliases: [lisp, "common lisp", scheme]
+
+  - name: Lua
+    category: language
+    aliases: []
+
+  - name: Groovy
+    category: language
+    aliases: []
+
+  - name: Assembly
+    category: language
+    aliases: ["assembly language", "x86 assembly", x86, arm assembly, "low level programming"]
+
+  # ------------------------------------------------------------------------------
+  # databases
+  # ------------------------------------------------------------------------------
+  - name: PostgreSQL
+    category: database
+    aliases: [postgres, psql, pgsql, "postgre sql", "postgres sql", "postgresql database", aurora]
+
+  - name: MySQL
+    category: database
+    aliases: ["my sql"]
+
+  - name: MariaDB
+    category: database
+    aliases: ["maria db"]
+
+  - name: SQLite
+    category: database
+    aliases: [sqlite3, "sq lite"]
+
+  - name: Microsoft SQL Server
+    category: database
+    aliases: ["sql server", mssql, "ms sql", "t sql", tsql, "transact sql"]
+
+  - name: Oracle Database
+    category: database
+    aliases: ["oracle db", "oracle rdbms", plsql, "pl sql", "oracle databases"]
+    notes: Bare "oracle" is deliberately not an alias; it usually names the company.
+
+  - name: MongoDB
+    category: database
+    aliases: [mongo, "mongo db", "document store"]
+
+  - name: Redis
+    category: database
+    aliases: ["redis cache", valkey, "redis streams"]
+
+  - name: DynamoDB
+    category: database
+    aliases: [dynamo, "dynamo db", "amazon dynamodb"]
+
+  - name: Cassandra
+    category: database
+    aliases: ["apache cassandra", scylladb, scylla]
+
+  - name: Elasticsearch
+    category: database
+    aliases: ["elastic search", opensearch, elk, "elk stack", lucene, solr]
+
+  - name: Snowflake
+    category: database
+    aliases: []
+
+  - name: BigQuery
+    category: database
+    aliases: ["big query", "google bigquery"]
+
+  - name: Redshift
+    category: database
+    aliases: ["amazon redshift", "aws redshift"]
+
+  - name: Neo4j
+    category: database
+    aliases: ["graph databases", "graph database", "neo 4j"]
+
+  - name: ClickHouse
+    category: database
+    aliases: ["click house", duckdb]
+
+  - name: Couchbase
+    category: database
+    aliases: [couchdb, "couch db"]
+
+  - name: InfluxDB
+    category: database
+    aliases: ["influx db", timescaledb, "time series databases", "time series database"]
+
+  - name: Firebase
+    category: database
+    aliases: [firestore, "firebase realtime database"]
+
+  - name: NoSQL
+    category: database
+    aliases: ["no sql", "non relational databases", "key value stores", "key value store", "document databases"]
+
+  - name: Vector Databases
+    category: database
+    aliases: ["vector database", pgvector, pinecone, weaviate, chromadb, chroma, faiss, milvus, qdrant, "vector store", "vector stores"]
+
+  - name: Data Warehousing
+    category: database
+    aliases: ["data warehouse", "data warehouses", olap, "dimensional modeling", "star schema"]
+
+  # ------------------------------------------------------------------------------
+  # cloud
+  # ------------------------------------------------------------------------------
+  - name: AWS
+    category: cloud
+    aliases: ["amazon web services", "amazon aws", "aws cloud"]
+
+  - name: Google Cloud Platform
+    category: cloud
+    aliases: [gcp, "google cloud", "google cloud services"]
+
+  - name: Microsoft Azure
+    category: cloud
+    aliases: [azure, "azure cloud", "azure devops", "ms azure"]
+
+  - name: AWS Lambda
+    category: cloud
+    aliases: [lambda, "lambda functions", "lambda function"]
+    notes: Guarded against "lambda expressions" / "lambda calculus" in the resolver.
+
+  - name: Amazon S3
+    category: cloud
+    aliases: [s3, "aws s3", "object storage", "blob storage"]
+
+  - name: Amazon EC2
+    category: cloud
+    aliases: [ec2, "aws ec2"]
+
+  - name: Amazon RDS
+    category: cloud
+    aliases: [rds, "aws rds", "managed databases"]
+
+  - name: Amazon SQS
+    category: cloud
+    aliases: [sqs, "aws sqs", "simple queue service"]
+
+  - name: Amazon SNS
+    category: cloud
+    aliases: [sns, "aws sns", "simple notification service"]
+
+  - name: Amazon ECS
+    category: cloud
+    aliases: [ecs, "aws ecs", fargate, "aws fargate"]
+
+  - name: AWS CloudFormation
+    category: cloud
+    aliases: [cloudformation, "cloud formation", "aws cdk", cdk]
+
+  - name: Cloudflare
+    category: cloud
+    aliases: ["cloudflare workers", "cloud flare"]
+
+  - name: Heroku
+    category: cloud
+    aliases: []
+
+  - name: Vercel
+    category: cloud
+    aliases: [netlify, "vercel deployments"]
+
+  - name: DigitalOcean
+    category: cloud
+    aliases: ["digital ocean", linode]
+
+  - name: Serverless
+    category: cloud
+    aliases: ["serverless architecture", "serverless architectures", faas, "function as a service", "serverless computing"]
+
+  - name: Cloud Computing
+    category: cloud
+    is_actionable: false
+    aliases: ["cloud platforms", "cloud platform", "cloud services", "cloud technologies", "cloud environments", "public cloud", "cloud native", "cloud infrastructure"]
+    notes: Vague catch-all. Kept so it stops flooding the candidate queue, excluded from the gap report.
+
+  # ------------------------------------------------------------------------------
+  # infra
+  # ------------------------------------------------------------------------------
+  - name: Docker
+    category: infra
+    aliases: [containers, container, containerization, "docker compose", "docker containers", podman, "container images"]
+
+  - name: Kubernetes
+    category: infra
+    aliases: [k8s, k8, kube, eks, "amazon eks", gke, aks, openshift, "container orchestration", kubectl]
+
+  - name: Terraform
+    category: infra
+    aliases: ["hashicorp terraform", pulumi, opentofu]
+
+  - name: Infrastructure as Code
+    category: infra
+    aliases: [iac, "infrastructure automation"]
+
+  - name: CI/CD
+    category: infra
+    aliases: [cicd, "continuous integration", "continuous delivery", "continuous deployment", "ci cd pipelines", "ci cd pipeline", "build pipelines", "deployment pipelines", "build and deployment"]
+
+  - name: Jenkins
+    category: infra
+    aliases: []
+
+  - name: GitHub Actions
+    category: infra
+    aliases: ["gh actions"]
+
+  - name: GitLab CI
+    category: infra
+    aliases: ["gitlab ci cd", "gitlab pipelines"]
+
+  - name: CircleCI
+    category: infra
+    aliases: ["circle ci", "travis ci", travisci, teamcity]
+
+  - name: Apache Kafka
+    category: infra
+    aliases: [kafka, "kafka streams", "event streaming", confluent, "kafka connect"]
+
+  - name: RabbitMQ
+    category: infra
+    aliases: ["rabbit mq", amqp]
+
+  - name: Message Queues
+    category: infra
+    aliases: ["message queue", "message brokers", "message broker", "pub sub", pubsub, "publish subscribe", "event driven architecture", "event driven systems", "event driven", "asynchronous messaging"]
+
+  - name: gRPC
+    category: infra
+    aliases: ["protocol buffers", protobuf, protobufs, rpc, "remote procedure call", "g rpc"]
+
+  - name: REST APIs
+    category: infra
+    aliases: [rest, restful, "rest api", "restful apis", "restful api", "restful services", "restful web services", "http apis", "web apis", "web api", "api integration"]
+    notes: Guarded against "the rest of", "at rest", "rest assured".
+
+  - name: GraphQL
+    category: infra
+    aliases: ["graph ql", apollo, "apollo graphql"]
+
+  - name: WebSockets
+    category: infra
+    aliases: [websocket, "web sockets", "socket io", "long polling"]
+
+  - name: Microservices
+    category: infra
+    aliases: [microservice, "micro services", "microservices architecture", "microservice architecture", "service oriented architecture", soa]
+
+  - name: Linux
+    category: infra
+    aliases: [unix, "linux unix", "unix linux", ubuntu, debian, "red hat", rhel, posix, "linux systems", "linux environments", "unix like"]
+
+  - name: Git
+    category: infra
+    aliases: [github, gitlab, bitbucket, "version control", "source control", "version control systems", "git workflows", "branching strategies"]
+
+  - name: Observability
+    category: infra
+    aliases: [monitoring, "monitoring and alerting", "logging and monitoring", logging, telemetry, "distributed tracing", opentelemetry, alerting, "structured logging", "metrics and logging"]
+
+  - name: Prometheus
+    category: infra
+    aliases: []
+
+  - name: Grafana
+    category: infra
+    aliases: [kibana]
+
+  - name: Datadog
+    category: infra
+    aliases: ["data dog", splunk, "new relic", sentry, honeycomb]
+
+  - name: Nginx
+    category: infra
+    aliases: ["apache http server", httpd, haproxy, "reverse proxy", envoy proxy, traefik]
+
+  - name: Load Balancing
+    category: infra
+    aliases: ["load balancer", "load balancers", "traffic routing", "horizontal scaling"]
+
+  - name: Caching
+    category: infra
+    aliases: ["caching strategies", "cache invalidation", "in memory caching", memcached, cdn, "content delivery network"]
+
+  - name: Networking
+    category: infra
+    aliases: ["computer networks", "computer networking", "networking fundamentals", "tcp ip", "network protocols", dns, "http protocol", "osi model"]
+
+  - name: Ansible
+    category: infra
+    aliases: [chef, puppet, saltstack, "configuration management"]
+
+  - name: Helm
+    category: infra
+    aliases: ["helm charts", kustomize]
+
+  - name: Apache Spark
+    category: infra
+    aliases: [spark, pyspark, "spark streaming"]
+
+  - name: Apache Airflow
+    category: infra
+    aliases: [airflow, dagster, prefect, luigi, "workflow orchestration", "job scheduling"]
+
+  - name: Hadoop
+    category: infra
+    aliases: [mapreduce, "map reduce", hive, hdfs, "big data"]
+
+  - name: Data Pipelines
+    category: infra
+    aliases: ["data pipeline", etl, elt, "etl pipelines", "data engineering", "batch processing", "stream processing", "data ingestion", "data processing pipelines"]
+
+  - name: dbt
+    category: infra
+    aliases: ["data build tool"]
+
+  - name: Apache Flink
+    category: infra
+    aliases: [flink, "flink streaming"]
+
+  - name: Build Tools
+    category: infra
+    aliases: ["build systems", bazel, gradle, maven, cmake, webpack, vite, rollup, npm, yarn, pnpm, "build automation", "package management"]
+
+  - name: Service Mesh
+    category: infra
+    aliases: [istio, linkerd, "sidecar proxy"]
+
+  # ------------------------------------------------------------------------------
+  # ml
+  # ------------------------------------------------------------------------------
+  - name: Machine Learning
+    category: ml
+    aliases: [ml, ai, "artificial intelligence", "machine learning models", "ml models", "applied machine learning", "machine learning algorithms"]
+    notes: 'AI is folded in here on purpose; a separate vague "AI" node would fragment the counts.'
+
+  - name: Deep Learning
+    category: ml
+    aliases: ["neural networks", "neural network", dnn, cnn, "convolutional neural networks", rnn, lstm, "deep neural networks"]
+
+  - name: PyTorch
+    category: ml
+    aliases: ["py torch", torch, "pytorch lightning"]
+
+  - name: TensorFlow
+    category: ml
+    aliases: ["tensor flow", keras, tf]
+
+  - name: scikit-learn
+    category: ml
+    aliases: [sklearn, "sci kit learn", "scikit learn"]
+
+  - name: NumPy
+    category: ml
+    aliases: ["num py", scipy]
+
+  - name: pandas
+    category: ml
+    aliases: ["pandas dataframes", dataframes, polars]
+
+  - name: NLP
+    category: ml
+    aliases: ["natural language processing", "text classification", "text mining", "language models"]
+
+  - name: Computer Vision
+    category: ml
+    aliases: [opencv, "image processing", "object detection", "image recognition", "image classification"]
+
+  - name: LLMs
+    category: ml
+    aliases: [llm, "large language models", "large language model", "generative ai", genai, "gen ai", "foundation models", gpt, "openai api", "anthropic api", "claude api", "llm applications"]
+
+  - name: RAG
+    category: ml
+    aliases: ["retrieval augmented generation", "retrieval augmented", "retrieval augmented generation rag"]
+
+  - name: Prompt Engineering
+    category: ml
+    aliases: [prompting, "prompt design", "prompt optimization"]
+
+  - name: LangChain
+    category: ml
+    aliases: [llamaindex, "llama index", "lang chain", "agent frameworks"]
+
+  - name: Hugging Face
+    category: ml
+    aliases: [huggingface, transformers, "transformer models", "hugging face transformers"]
+
+  - name: Reinforcement Learning
+    category: ml
+    aliases: [rl, rlhf, "deep reinforcement learning"]
+
+  - name: Recommendation Systems
+    category: ml
+    aliases: ["recommender systems", "recommendation engines", "recommendation engine", personalization, "ranking systems"]
+
+  - name: MLOps
+    category: ml
+    aliases: ["ml ops", "model deployment", "model serving", "ml infrastructure", "ml pipelines", "feature stores", mlflow, "model monitoring", "machine learning infrastructure"]
+
+  - name: Model Training
+    category: ml
+    aliases: ["model evaluation", "hyperparameter tuning", "fine tuning", finetuning, "training models", "model fine tuning", "training pipelines"]
+
+  - name: Data Science
+    category: ml
+    aliases: ["data scientist", "exploratory data analysis", eda, "data analysis", "data analytics", "analytics"]
+
+  - name: Statistics
+    category: ml
+    aliases: ["statistical modeling", "statistical analysis", probability, "a b testing", "ab testing", experimentation, "statistical methods", "hypothesis testing"]
+
+  - name: Embeddings
+    category: ml
+    aliases: ["vector embeddings", "semantic search", "similarity search", "nearest neighbor search", "vector search", "text embeddings"]
+
+  - name: XGBoost
+    category: ml
+    aliases: [lightgbm, "gradient boosting", "random forests", "decision trees", "boosted trees"]
+
+  - name: Jupyter
+    category: ml
+    aliases: ["jupyter notebooks", "jupyter notebook", colab, "google colab", notebooks]
+
+  # ------------------------------------------------------------------------------
+  # frameworks
+  # ------------------------------------------------------------------------------
+  - name: React
+    category: framework
+    aliases: [reactjs, "react js", "react.js", "react hooks"]
+
+  - name: Angular
+    category: framework
+    aliases: [angularjs, "angular js"]
+
+  - name: Vue.js
+    category: framework
+    aliases: [vue, vuejs, "vue js", nuxt, "nuxt js"]
+
+  - name: Svelte
+    category: framework
+    aliases: [sveltekit, "svelte kit"]
+
+  - name: Next.js
+    category: framework
+    aliases: [nextjs, "next js"]
+
+  - name: Node.js
+    category: framework
+    aliases: [nodejs, node, "node js", "node runtime"]
+
+  - name: Express.js
+    category: framework
+    aliases: [express, expressjs, "express js"]
+    notes: Bare "express" is guarded against "express interest" / "express written consent".
+
+  - name: Django
+    category: framework
+    aliases: ["django rest framework", drf]
+
+  - name: Flask
+    category: framework
+    aliases: []
+
+  - name: FastAPI
+    category: framework
+    aliases: ["fast api"]
+
+  - name: Spring Boot
+    category: framework
+    aliases: [spring, springboot, "spring framework", "spring mvc", "spring cloud"]
+    notes: Bare "spring" is guarded against "spring 2027" style start-season text.
+
+  - name: .NET
+    category: framework
+    aliases: [dotnet, ".net core", "dotnet core", ".net framework", "asp.net", "asp.net core", aspnet, "asp net", "entity framework core"]
+
+  - name: Ruby on Rails
+    category: framework
+    aliases: [rails, ror, "rails framework"]
+
+  - name: Laravel
+    category: framework
+    aliases: [symfony]
+
+  - name: React Native
+    category: framework
+    aliases: ["react native apps"]
+
+  - name: Flutter
+    category: framework
+    aliases: []
+
+  - name: jQuery
+    category: framework
+    aliases: ["j query"]
+
+  - name: Tailwind CSS
+    category: framework
+    aliases: [tailwind, tailwindcss]
+
+  - name: Bootstrap
+    category: framework
+    aliases: ["bootstrap css"]
+
+  - name: HTML
+    category: framework
+    aliases: [html5, "html 5", "semantic html", "html css"]
+
+  - name: CSS
+    category: framework
+    aliases: [css3, sass, scss, "styled components", "css modules"]
+
+  - name: Redux
+    category: framework
+    aliases: [mobx, zustand, "state management"]
+
+  - name: Electron
+    category: framework
+    aliases: ["electron js", tauri]
+
+  - name: Unity
+    category: framework
+    aliases: [unity3d, "unity 3d"]
+
+  - name: Unreal Engine
+    category: framework
+    aliases: [unreal, "unreal engine 5"]
+
+  - name: ORM
+    category: framework
+    aliases: [orms, sqlalchemy, hibernate, prisma, "entity framework", "object relational mapping", "active record", "database orm"]
+
+  - name: Testing Frameworks
+    category: framework
+    aliases: [pytest, junit, jest, mocha, vitest, rspec, testng, "unit testing frameworks", "testing libraries"]
+
+  # ------------------------------------------------------------------------------
+  # practices
+  # ------------------------------------------------------------------------------
+  - name: Data Structures & Algorithms
+    category: practice
+    aliases: [dsa, "ds and a", "data structures", algorithms, "algorithms and data structures", "cs fundamentals", "computer science fundamentals", "algorithm design", "computer science concepts", "algorithmic thinking", "strong fundamentals in data structures and algorithms"]
+
+  - name: System Design
+    category: practice
+    aliases: ["systems design", "designing systems", "large scale systems", "large scale distributed systems", "system architecture"]
+
+  - name: Distributed Systems
+    category: practice
+    aliases: ["distributed computing", "distributed architecture", "consensus algorithms", "distributed system"]
+
+  - name: Object-Oriented Programming
+    category: practice
+    aliases: [oop, "object oriented programming", "object oriented design", ood, "object oriented", "oo design"]
+
+  - name: Functional Programming
+    category: practice
+    aliases: [fp, "functional paradigms", immutability]
+
+  - name: Design Patterns
+    category: practice
+    aliases: ["software design patterns", "design pattern"]
+
+  - name: Software Architecture
+    category: practice
+    aliases: ["architectural design", "technical architecture", "architecture patterns", "architectural decisions"]
+
+  - name: API Design
+    category: practice
+    aliases: ["api development", "designing apis", "api documentation", openapi, "open api", swagger, "api contracts", "building apis"]
+
+  - name: Unit Testing
+    category: practice
+    aliases: ["unit tests", "unit test", "writing unit tests"]
+
+  - name: Integration Testing
+    category: practice
+    aliases: ["integration tests", "integration test"]
+
+  - name: Test-Driven Development
+    category: practice
+    aliases: [tdd, "test driven development", "test driven", bdd, "behavior driven development"]
+
+  - name: End-to-End Testing
+    category: practice
+    aliases: ["e2e testing", "end to end tests", selenium, cypress, playwright, "browser automation", "ui testing"]
+
+  - name: Automated Testing
+    category: practice
+    aliases: ["test automation", "automated tests", "writing tests", testing, "software testing", qa, "quality assurance", "testing best practices"]
+
+  - name: Code Review
+    category: practice
+    aliases: ["code reviews", "peer review", "peer reviews", "pull requests", "reviewing code", "code review process"]
+
+  - name: Debugging
+    category: practice
+    aliases: [troubleshooting, "root cause analysis", "debugging skills", "diagnosing issues"]
+
+  - name: Agile
+    category: practice
+    aliases: ["agile development", "agile methodologies", "agile methodology", "agile environment", "agile practices"]
+
+  - name: Scrum
+    category: practice
+    aliases: [kanban, "sprint planning", sprints, "scrum ceremonies", "stand ups", "daily standups", retrospectives]
+
+  - name: Performance Optimization
+    category: practice
+    aliases: ["performance tuning", "optimizing performance", profiling, "latency optimization", "performance engineering", "performance improvements", "optimizing code"]
+
+  - name: Scalability
+    category: practice
+    aliases: ["scalable systems", "scaling systems", "highly scalable", "scalable architecture", "high throughput"]
+
+  - name: Reliability Engineering
+    category: practice
+    aliases: [sre, "site reliability", "site reliability engineering", reliability, "high availability", "fault tolerance", "fault tolerant", "disaster recovery", "resilient systems"]
+
+  - name: Incident Response
+    category: practice
+    aliases: ["on call", oncall, "incident management", pagerduty, postmortems, "post mortems", "production support"]
+
+  - name: Concurrency
+    category: practice
+    aliases: ["concurrent programming", multithreading, "multi threading", threading, parallelism, "parallel programming", "async programming", "asynchronous programming", "thread safety", "race conditions"]
+
+  - name: Operating Systems
+    category: practice
+    aliases: ["os fundamentals", "memory management", "process management", "systems programming", "kernel development"]
+
+  - name: Compilers
+    category: practice
+    aliases: ["compiler design", interpreters, "programming language theory", "static analysis", parsers]
+
+  - name: Application Security
+    category: practice
+    aliases: [security, appsec, "secure coding", "security best practices", vulnerabilities, "vulnerability management", owasp, "penetration testing", "threat modeling", "secure development"]
+
+  - name: Cryptography
+    category: practice
+    aliases: [encryption, "cryptographic protocols", tls, ssl, "public key infrastructure", pki, hashing, "encryption at rest"]
+
+  - name: Authentication & Authorization
+    category: practice
+    aliases: [authentication, authorization, oauth, oauth2, "oauth 2.0", saml, sso, "single sign on", jwt, "identity management", rbac, "access control", "auth flows"]
+
+  - name: Data Modeling
+    category: practice
+    aliases: ["database design", "schema design", "database modeling", "data models", "entity relationship modeling", "designing schemas"]
+
+  - name: Query Optimization
+    category: practice
+    aliases: ["query tuning", "database performance", indexing, "database indexing", "explain analyze", "sql optimization", "query performance"]
+
+  - name: Refactoring
+    category: practice
+    aliases: ["code refactoring", "legacy code", "technical debt", "code quality", "clean code", "maintainable code", "readable code", "code maintainability"]
+
+  - name: Technical Documentation
+    category: practice
+    aliases: [documentation, "technical writing", "writing documentation", "design docs", "design documents", runbooks, "documenting code"]
+
+  - name: Accessibility
+    category: practice
+    aliases: [a11y, wcag, "web accessibility", "screen readers", "accessible design"]
+
+  - name: UI/UX Design
+    category: practice
+    aliases: ["ui ux", "user experience", "ux design", "ui design", "user interface design", figma, "design systems", "responsive design", "responsive web design", wireframing, "cross browser compatibility"]
+
+  - name: Open Source
+    category: practice
+    aliases: ["open source contributions", "open source projects", oss, "contributing to open source", "open source community"]
+
+  - name: Computer Science Degree
+    category: practice
+    is_actionable: false
+    aliases: ["cs degree", "bachelors degree", "bachelor of science", "masters degree", "degree in computer science", "bs in computer science", "ms in computer science", "related technical field", "equivalent practical experience", "pursuing a bachelors degree"]
+    notes: Credential requirement, not a skill. Kept so degree boilerplate does not flood the candidate queue.
+
+  - name: Internship Experience
+    category: practice
+    is_actionable: false
+    aliases: [internship, internships, "prior internship", "internship experience required", "previous internships", "co op experience"]
+    notes: Not actionable in the gap-report sense.
+
+  # ------------------------------------------------------------------------------
+  # domains
+  # ------------------------------------------------------------------------------
+  - name: Backend Development
+    category: domain
+    aliases: [backend, "back end", "backend engineering", "server side", "backend services", "backend systems", "back end development"]
+
+  - name: Frontend Development
+    category: domain
+    aliases: [frontend, "front end", "frontend engineering", "client side", "front end development", "frontend applications"]
+
+  - name: Full-Stack Development
+    category: domain
+    aliases: ["full stack", fullstack, "full stack engineering", "web development", "end to end development", "full stack applications"]
+
+  - name: Mobile Development
+    category: domain
+    aliases: ["mobile app development", "ios development", "android development", ios, android, "mobile apps", "native apps", "mobile applications"]
+
+  - name: Embedded Systems
+    category: domain
+    aliases: ["embedded software", firmware, rtos, iot, "internet of things", "embedded c", "embedded development", "bare metal"]
+
+  - name: Cybersecurity
+    category: domain
+    aliases: ["cyber security", infosec, "information security", "security engineering", "security operations", "security research"]
+
+  - name: Robotics
+    category: domain
+    aliases: [ros, "robot operating system", "motion planning", "autonomous robots", "robotic systems"]
+
+  - name: Autonomous Vehicles
+    category: domain
+    is_actionable: false
+    aliases: ["self driving", "self driving cars", adas, "autonomous driving", "autonomous systems"]
+
+  - name: Fintech
+    category: domain
+    is_actionable: false
+    aliases: ["financial services", "financial technology", banking, payments, "capital markets", "trading systems", "payment processing"]
+
+  - name: Healthcare
+    category: domain
+    is_actionable: false
+    aliases: ["health care", healthtech, "medical devices", hipaa, "clinical data", "electronic health records", "healthcare technology"]
+
+  - name: E-Commerce
+    category: domain
+    is_actionable: false
+    aliases: [ecommerce, "online retail", marketplace, "retail technology", "checkout flows"]
+
+  - name: Gaming
+    category: domain
+    is_actionable: false
+    aliases: ["game development", "video games", "game engines", gamedev, "games industry"]
+
+  - name: Ad Tech
+    category: domain
+    is_actionable: false
+    aliases: [adtech, "digital advertising", "programmatic advertising", "ad serving"]
+
+  - name: Biotech
+    category: domain
+    is_actionable: false
+    aliases: [bioinformatics, "computational biology", "life sciences", genomics, "biotech industry"]
+
+  - name: EdTech
+    category: domain
+    is_actionable: false
+    aliases: ["ed tech", "education technology", "learning platforms"]
+
+  - name: Supply Chain
+    category: domain
+    is_actionable: false
+    aliases: [logistics, "warehouse management", "inventory management", "fleet management", "supply chain systems"]
+
+  - name: Telecommunications
+    category: domain
+    is_actionable: false
+    aliases: [telecom, "5g", wireless, "network operators", "telecom systems"]
+
+  - name: Aerospace & Defense
+    category: domain
+    is_actionable: false
+    aliases: [aerospace, defense, avionics, "defense contracting", "security clearance", "government contracts", "itar"]
+
+  - name: SaaS
+    category: domain
+    is_actionable: false
+    aliases: ["b2b saas", "enterprise software", "software as a service", "multi tenant"]
+
+  # ------------------------------------------------------------------------------
+  # soft (never actionable; excluded from the gap report by design)
+  # ------------------------------------------------------------------------------
+  - name: Communication
+    category: soft
+    is_actionable: false
+    aliases: ["communication skills", "strong communication", "excellent communication", "written and verbal communication", "verbal communication", "written communication", "clear communication", "effective communication", "communicate effectively", "strong communication skills"]
+
+  - name: Teamwork
+    category: soft
+    is_actionable: false
+    aliases: [collaboration, collaborative, "team player", "work well with others", "working in teams", "team environment", "collaborative environment", "work collaboratively"]
+
+  - name: Leadership
+    category: soft
+    is_actionable: false
+    aliases: ["leadership skills", "lead teams", "leading projects", "technical leadership", "lead by example"]
+
+  - name: Mentorship
+    category: soft
+    is_actionable: false
+    aliases: [mentoring, mentor, "mentor junior engineers", coaching, "knowledge sharing", "mentoring others"]
+
+  - name: Problem Solving
+    category: soft
+    is_actionable: false
+    aliases: ["problem solving skills", "analytical skills", "analytical thinking", "critical thinking", "strong problem solving", "problem solver"]
+
+  - name: Attention to Detail
+    category: soft
+    is_actionable: false
+    aliases: ["detail oriented", meticulous, "eye for detail"]
+
+  - name: Time Management
+    category: soft
+    is_actionable: false
+    aliases: [prioritization, "prioritize work", "managing multiple projects", "meeting deadlines", "organizational skills"]
+
+  - name: Adaptability
+    category: soft
+    is_actionable: false
+    aliases: [adaptable, flexibility, "comfortable with ambiguity", "thrive in ambiguity", "changing priorities", "handle ambiguity"]
+
+  - name: Continuous Learning
+    category: soft
+    is_actionable: false
+    aliases: ["eager to learn", "quick learner", "willingness to learn", curiosity, curious, "passion for learning", "growth mindset", "desire to learn"]
+
+  - name: Ownership
+    category: soft
+    is_actionable: false
+    aliases: ["sense of ownership", accountability, "take ownership", "end to end ownership", "self starter", "self motivated", initiative, "bias for action", proactive]
+
+  - name: Cross-Functional Collaboration
+    category: soft
+    is_actionable: false
+    aliases: ["cross functional", "cross functional teams", "cross functional collaboration", "work with product managers", "partner with stakeholders", "stakeholder management", "working across teams"]
+
+  - name: Customer Focus
+    category: soft
+    is_actionable: false
+    aliases: ["customer obsessed", "customer facing", "user focused", "customer empathy", "user empathy", "customer centric"]
+
+  - name: Fast-Paced Environment
+    category: soft
+    is_actionable: false
+    aliases: ["fast paced", "fast paced environment", "startup environment", "move fast", "high growth environment", "dynamic environment"]
+
+  - name: Presentation Skills
+    category: soft
+    is_actionable: false
+    aliases: ["presenting to stakeholders", "public speaking", "present findings", "presenting technical concepts"]
+
+  - name: Work Ethic
+    category: soft
+    is_actionable: false
+    aliases: ["strong work ethic", "hard working", dedication, "results driven", "results oriented"]
+
+  - name: Creativity
+    category: soft
+    is_actionable: false
+    aliases: [creative, innovative, "innovative thinking", "think outside the box", "creative problem solving"]
+
+  - name: Empathy
+    category: soft
+    is_actionable: false
+    aliases: [empathetic, "emotional intelligence", "interpersonal skills"]
+
+  - name: Independence
+    category: soft
+    is_actionable: false
+    aliases: ["work independently", independently, autonomy, "minimal supervision", "self directed", "work autonomously"]
+
+  - name: Product Sense
+    category: soft
+    is_actionable: false
+    aliases: ["product mindset", "product thinking", "business acumen", "business impact", "product intuition"]
+
+  - name: Diversity & Inclusion
+    category: soft
+    is_actionable: false
+    aliases: [dei, "inclusive environment", "equal opportunity", "diverse perspectives", "inclusive culture"]

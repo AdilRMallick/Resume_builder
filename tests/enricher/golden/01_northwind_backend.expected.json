@@ -1,0 +1,28 @@
+{
+  "company": "Northwind Systems",
+  "title": "Software Engineer, Backend (New Grad)",
+  "requirements": [
+    {"raw_text": "Go", "importance": "required"},
+    {"raw_text": "Python", "importance": "required"},
+    {"raw_text": "PostgreSQL", "importance": "required"},
+    {"raw_text": "code review", "importance": "required"},
+    {"raw_text": "on-call rotation", "importance": "mentioned"},
+    {"raw_text": "integration tests", "importance": "required"},
+    {"raw_text": "Bachelor's degree in Computer Science", "importance": "required"},
+    {"raw_text": "Java", "importance": "required"},
+    {"raw_text": "C++", "importance": "required"},
+    {"raw_text": "data structures, algorithms", "importance": "required"},
+    {"raw_text": "SQL", "importance": "required"},
+    {"raw_text": "relational database design", "importance": "required"},
+    {"raw_text": "Git", "importance": "required"},
+    {"raw_text": "written communication", "importance": "required"},
+    {"raw_text": "Kubernetes", "importance": "preferred"},
+    {"raw_text": "distributed systems", "importance": "preferred"},
+    {"raw_text": "Apache Kafka", "importance": "preferred"},
+    {"raw_text": "Internship or co-op experience", "importance": "preferred"},
+    {"raw_text": "AWS", "importance": "mentioned"},
+    {"raw_text": "Terraform", "importance": "mentioned"},
+    {"raw_text": "Redis", "importance": "mentioned"},
+    {"raw_text": "Datadog", "importance": "mentioned"}
+  ]
+}

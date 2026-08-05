@@ -1,0 +1,30 @@
+{
+  "id": "6f6b1f2a-3c4d-4e5f-8a9b-0c1d2e3f4a5b",
+  "text": "Backend Engineer, University Grad",
+  "hostedUrl": "https://jobs.lever.co/northwind/6f6b1f2a-3c4d-4e5f-8a9b-0c1d2e3f4a5b",
+  "applyUrl": "https://jobs.lever.co/northwind/6f6b1f2a-3c4d-4e5f-8a9b-0c1d2e3f4a5b/apply",
+  "createdAt": 1780000000000,
+  "country": "US",
+  "workplaceType": "hybrid",
+  "categories": {
+    "commitment": "Full-time",
+    "department": "Engineering",
+    "location": "Chicago, IL",
+    "team": "Platform",
+    "allLocations": ["Chicago, IL", "Remote (US)"]
+  },
+  "description": "<div><p>Northwind runs the payments ledger for mid-market retailers.</p><script>track();</script></div>",
+  "descriptionPlain": "Northwind runs the payments ledger for mid-market retailers.",
+  "lists": [
+    {
+      "text": "What you&rsquo;ll do",
+      "content": "<li>Design and ship services in <b>Go</b> and Python</li><li>Own the data model in PostgreSQL</li><li>Instrument everything you build</li>"
+    },
+    {
+      "text": "Requirements",
+      "content": "<li>Graduating in 2026 or 2027 with a CS degree</li><li>Comfortable with <b>SQL</b> and at least one compiled language</li><li>Familiar with Docker &amp; CI pipelines</li>"
+    }
+  ],
+  "additional": "<p>Northwind does not provide visa sponsorship for this role.</p>",
+  "additionalPlain": "Northwind does not provide visa sponsorship for this role."
+}

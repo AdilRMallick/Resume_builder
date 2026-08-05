@@ -1,0 +1,50 @@
+New Grad Software Engineer, Infrastructure - Vega Robotics
+
+Vega Robotics builds autonomous material handling robots for warehouses. There are about
+eleven hundred of our units on customer floors today, and every one of them talks to the
+fleet services our Infrastructure team runs. When our platform has a bad minute, someone's
+distribution center stops moving.
+
+What the team does
+
+The Infrastructure team owns the compute, networking, and deployment tooling that the rest
+of engineering builds on: our Kubernetes clusters, the CI system, the observability stack,
+and the over-the-air update path that ships new firmware to a robot in the field.
+
+Your first year
+
+- Own a piece of our internal developer platform, most likely the build and deploy path that
+  every other team uses many times a day.
+- Write infrastructure as code in Terraform, and the Go tooling that wraps it.
+- Improve our observability: we run Prometheus and Grafana, and there is real work to do in
+  making alerts mean something.
+- Automate what is currently manual. We keep a running list of toil and we take it seriously.
+- Join the on-call rotation for platform services in your second quarter.
+
+Requirements
+
+- BS or MS in Computer Science, Computer Engineering, or equivalent experience, graduating
+  by summer 2026.
+- Programming experience in Go, Python, or Rust.
+- A working mental model of Linux: processes, file descriptors, permissions, and networking
+  basics.
+- Understanding of how containers work, not just how to run docker build.
+- Familiarity with Git-based workflows and continuous integration.
+- Willingness to be on-call and a level head when something is broken.
+
+Bonus points
+
+- Experience operating Kubernetes, whether at work, at school, or in a home lab.
+- Any exposure to Prometheus, Grafana, or another metrics and alerting stack.
+- Scripting in Bash and comfort living in a terminal.
+- Experience with an embedded or real-time system, or any exposure to ROS.
+- Contributions to an open source infrastructure project.
+- Interest in robotics. You do not need robotics experience; you do need to find it
+  interesting, because you will hear about it every day.
+
+Logistics
+
+The role is on-site four days a week in Pittsburgh, Pennsylvania. We provide relocation
+assistance. Vega Robotics sponsors H-1B and other employment visas for this position.
+
+We are an equal opportunity employer and value diversity at our company.

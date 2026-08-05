@@ -1,0 +1,25 @@
+{
+  "company": "Vega Robotics",
+  "title": "New Grad Software Engineer, Infrastructure",
+  "requirements": [
+    {"raw_text": "Kubernetes", "importance": "preferred"},
+    {"raw_text": "Terraform", "importance": "required"},
+    {"raw_text": "Go", "importance": "required"},
+    {"raw_text": "Python", "importance": "required"},
+    {"raw_text": "Rust", "importance": "required"},
+    {"raw_text": "Prometheus", "importance": "preferred"},
+    {"raw_text": "Grafana", "importance": "preferred"},
+    {"raw_text": "BS or MS in Computer Science", "importance": "required"},
+    {"raw_text": "Linux", "importance": "required"},
+    {"raw_text": "containers", "importance": "required"},
+    {"raw_text": "Git-based workflows", "importance": "required"},
+    {"raw_text": "continuous integration", "importance": "required"},
+    {"raw_text": "Willingness to be on-call", "importance": "required"},
+    {"raw_text": "Bash", "importance": "preferred"},
+    {"raw_text": "ROS", "importance": "preferred"},
+    {"raw_text": "observability", "importance": "mentioned"},
+    {"raw_text": "embedded or real-time system", "importance": "preferred"},
+    {"raw_text": "open source infrastructure project", "importance": "preferred"},
+    {"raw_text": "Interest in robotics", "importance": "preferred"}
+  ]
+}

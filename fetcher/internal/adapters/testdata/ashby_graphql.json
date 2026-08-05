@@ -1,0 +1,13 @@
+{
+  "data": {
+    "jobPosting": {
+      "id": "cafebabe-0000-4fff-9999-abcdefabcdef",
+      "title": "Site Reliability Engineer, New Grad",
+      "locationName": "Remote - United States",
+      "employmentType": "FullTime",
+      "departmentName": "Infrastructure",
+      "organization": { "name": "Halcyon Labs" },
+      "descriptionHtml": "<div><p>This posting is unlisted and reachable only by direct link.</p><h3>What you will do</h3><ul><li>Operate Kubernetes clusters across three regions</li><li>Own the on-call rotation runbooks and incident reviews</li><li>Write automation in Go and Python</li></ul><h3>Requirements</h3><ul><li>Bachelor's degree completed by mid 2027</li><li>Linux fundamentals and networking basics</li><li>Terraform or another infrastructure-as-code tool</li></ul></div>"
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "company": "Palisade Analytics",
+  "title": "Associate Software Engineer, Data Platform",
+  "requirements": [
+    {"raw_text": "Apache Airflow", "importance": "required"},
+    {"raw_text": "Python", "importance": "required"},
+    {"raw_text": "SQL", "importance": "required"},
+    {"raw_text": "Snowflake", "importance": "preferred"},
+    {"raw_text": "Kafka", "importance": "mentioned"},
+    {"raw_text": "Apache Flink", "importance": "mentioned"},
+    {"raw_text": "data quality checks", "importance": "mentioned"},
+    {"raw_text": "Bachelor's or Master's degree", "importance": "required"},
+    {"raw_text": "window functions", "importance": "required"},
+    {"raw_text": "databases", "importance": "required"},
+    {"raw_text": "distributed systems", "importance": "required"},
+    {"raw_text": "communicate technical tradeoffs", "importance": "required"},
+    {"raw_text": "Graduation between December 2025 and June 2026", "importance": "required"},
+    {"raw_text": "Apache Spark", "importance": "preferred"},
+    {"raw_text": "dbt", "importance": "preferred"},
+    {"raw_text": "Terraform", "importance": "preferred"},
+    {"raw_text": "dimensional modeling", "importance": "preferred"},
+    {"raw_text": "BigQuery", "importance": "preferred"},
+    {"raw_text": "Redshift", "importance": "preferred"},
+    {"raw_text": "open source data tooling", "importance": "preferred"}
+  ]
+}

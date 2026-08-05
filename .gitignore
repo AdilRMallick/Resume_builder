@@ -1,0 +1,30 @@
+# secrets - .env.example is committed, .env never is
+.env
+.env.local
+
+# python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# go
+bin/
+fetcher/fetcher
+fetcher/*.exe
+
+# editors / os
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# local scratch
+*.log
+tmp/
+scratch/

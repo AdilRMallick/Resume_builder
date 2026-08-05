@@ -1,0 +1,55 @@
+Software Engineer I, Full Stack - Cobalt Health
+
+Cobalt Health is a clinical documentation company. Our product sits between a physician and
+their electronic health record and removes the two hours of charting that currently happen
+after every clinic day. We are a fifty-person company with eleven engineers, and we ship to
+production several times a week.
+
+The team
+
+You would join the Provider Experience team, which owns everything a clinician actually
+touches: the web application, the mobile companion, and the API that backs both. The team is
+four engineers, one designer, and a product manager who used to be a nurse.
+
+Responsibilities
+
+- Build user-facing features in React and TypeScript, from the first Figma review through to
+  the production rollout.
+- Implement and extend the REST APIs those features depend on. Our backend is Python with
+  FastAPI.
+- Write unit and end-to-end tests. We use pytest on the backend and Playwright for the
+  browser flows.
+- Work directly with clinicians during design reviews and usability sessions.
+- Help keep our CI/CD pipeline healthy. Everyone on the team is expected to be able to
+  unblock a broken build.
+
+What we are looking for
+
+- A degree in Computer Science, Human-Computer Interaction, or equivalent practical
+  experience.
+- Fluency in JavaScript or TypeScript and comfort with modern React, including hooks and
+  component composition.
+- Some experience with a backend language; Python is what we use, but we care much more
+  about whether you can reason about an HTTP request than about which language taught you.
+- Familiarity with HTML and CSS, and an eye for when an interface feels wrong.
+- Comfort reading code you did not write. Most of your first month will be reading.
+- Excellent communication skills and the patience to work with users who are not engineers.
+
+Nice to have
+
+- Experience with Docker and containerized local development.
+- Exposure to healthcare data standards such as HL7 or FHIR.
+- Prior work with PostgreSQL, including writing queries you would be willing to run in
+  production.
+- Any experience with accessibility standards and WCAG compliance.
+- A portfolio, side project, or open source contribution you can walk us through.
+
+How we hire
+
+One recruiter conversation, one technical screen in the language of your choice, and an
+onsite consisting of a systems discussion, a pairing session on our real codebase, and a
+conversation with the product manager. We give a decision within three business days of the
+onsite.
+
+Cobalt Health does not sponsor employment visas at this time for this role. Applicants must
+be authorized to work in the United States.

@@ -1,0 +1,19 @@
+{
+  "requirements": [
+    {"raw_text": "Kubernetes", "importance": "preferred", "confidence": 0.85},
+    {"raw_text": "Terraform", "importance": "required", "confidence": 0.9},
+    {"raw_text": "Go", "importance": "required", "confidence": 0.9},
+    {"raw_text": "Python", "importance": "required", "confidence": 0.85},
+    {"raw_text": "Rust", "importance": "required", "confidence": 0.8},
+    {"raw_text": "Prometheus", "importance": "preferred", "confidence": 0.75},
+    {"raw_text": "Grafana", "importance": "preferred", "confidence": 0.75},
+    {"raw_text": "BS or MS in Computer Science, Computer Engineering, or equivalent experience", "importance": "required", "confidence": 0.95},
+    {"raw_text": "A working mental model of Linux", "importance": "required", "confidence": 0.9},
+    {"raw_text": "Understanding of how containers work", "importance": "required", "confidence": 0.85},
+    {"raw_text": "Familiarity with Git-based workflows and continuous integration", "importance": "required", "confidence": 0.9},
+    {"raw_text": "Willingness to be on-call", "importance": "required", "confidence": 0.8},
+    {"raw_text": "Scripting in Bash", "importance": "preferred", "confidence": 0.7},
+    {"raw_text": "ROS", "importance": "preferred", "confidence": 0.5},
+    {"raw_text": "observability", "importance": "mentioned", "confidence": 0.5}
+  ]
+}

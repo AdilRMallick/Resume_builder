@@ -1,0 +1,49 @@
+Associate Software Engineer, Data Platform - Palisade Analytics
+
+Palisade Analytics gives retail operators a single view of inventory across every warehouse,
+store, and third-party marketplace they sell through. The Data Platform team owns the
+pipelines that make that possible: roughly nine hundred daily batch jobs and a streaming
+path that carries about two billion events a month.
+
+This posting is for our 2026 new graduate cohort. You will be paired with a mentor for your
+first two quarters and rotate through two of the three sub-teams before choosing where to
+land.
+
+In this role you will
+
+- Build and maintain batch data pipelines using Apache Airflow, and own the dags you write
+  through to production.
+- Write transformation logic in Python and SQL against a Snowflake warehouse.
+- Contribute to our streaming ingestion path, which is built on Kafka and Apache Flink.
+- Instrument pipelines with data quality checks so that a bad upstream feed fails loudly
+  instead of quietly corrupting a dashboard.
+- Debug production incidents with the team, and write the postmortem afterwards.
+
+Minimum qualifications
+
+- Currently pursuing or recently completed a Bachelor's or Master's degree in Computer
+  Science, Data Science, Statistics, or a related field.
+- Strong programming ability in Python.
+- Demonstrated proficiency in SQL, including joins, window functions, and query optimization.
+- Coursework or project experience in databases or distributed systems.
+- Ability to communicate technical tradeoffs clearly to non-technical stakeholders.
+- Graduation between December 2025 and June 2026.
+
+Preferred qualifications
+
+- Hands-on experience with a cloud data warehouse such as Snowflake, BigQuery, or Redshift.
+- Familiarity with Apache Spark or a comparable distributed processing framework.
+- Experience with dbt or a similar analytics engineering tool.
+- Exposure to infrastructure as code, particularly Terraform.
+- Understanding of dimensional modeling and slowly changing dimensions.
+- Contributions to open source data tooling.
+
+Working here
+
+The Data Platform team is fully remote within the United States, with an optional office in
+Denver and two on-site team weeks a year. We run a four-day release cycle, no deploys on
+Fridays, and a genuine on-call rotation that pays for the interruption.
+
+Palisade Analytics is committed to building a team that reflects the operators we serve. We
+strongly encourage applications from candidates whose backgrounds are underrepresented in
+data engineering.
