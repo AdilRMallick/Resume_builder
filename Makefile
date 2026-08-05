@@ -1,7 +1,7 @@
 PY := ./.venv/Scripts/python.exe
 
 .DEFAULT_GOAL := help
-.PHONY: help up down logs psql redis install migrate revision test test-py test-go lint fmt fetcher clean nuke
+.PHONY: help up down logs psql redis dev-setup verify-services install migrate revision test test-py test-go lint fmt fetcher clean nuke
 
 help: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -22,6 +22,12 @@ psql: ## Open a psql shell
 
 redis: ## Open a redis-cli shell
 	docker exec -it jme-redis redis-cli
+
+dev-setup: ## Install Postgres+pgvector and Redis natively (for machines without Docker)
+	sudo scripts/dev-setup.sh
+
+verify-services: ## Check Postgres:5433 and Redis:6380 are reachable
+	scripts/dev-setup.sh --verify-only
 
 # ---- python ------------------------------------------------------------------
 
