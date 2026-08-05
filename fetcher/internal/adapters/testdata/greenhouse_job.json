@@ -1,0 +1,20 @@
+{
+  "id": 4012345,
+  "internal_job_id": 3009876,
+  "title": "Software Engineer, New Grad (2027)",
+  "updated_at": "2026-06-11T09:14:03-04:00",
+  "requisition_id": "R-2087",
+  "absolute_url": "https://job-boards.greenhouse.io/acmerobotics/jobs/4012345",
+  "location": { "name": "Detroit, MI" },
+  "company_name": "Acme Robotics",
+  "offices": [
+    { "id": 41, "name": "Detroit", "location": "Detroit, MI, USA" },
+    { "id": 42, "name": "Remote - US", "location": "United States" }
+  ],
+  "departments": [{ "id": 12, "name": "Engineering" }],
+  "metadata": [],
+  "content": "&lt;div class=\"content-intro\"&gt;&lt;p&gt;Acme Robotics builds autonomy software for warehouse fleets.&lt;/p&gt;&lt;/div&gt;\n&lt;script&gt;window.__gh = 1;&lt;/script&gt;\n&lt;p&gt;&lt;strong&gt;About the role&lt;/strong&gt;&lt;/p&gt;\n&lt;p&gt;You will work on the fleet scheduling service, written in &lt;strong&gt;Go&lt;/strong&gt; and backed by &lt;strong&gt;PostgreSQL&lt;/strong&gt; and &lt;strong&gt;Redis&lt;/strong&gt;.&lt;/p&gt;\n&lt;p&gt;&lt;strong&gt;What you will need&lt;/strong&gt;&lt;/p&gt;\n&lt;ul&gt;\n&lt;li&gt;BS or MS in Computer Science, graduating between December 2026 and June 2027&lt;/li&gt;\n&lt;li&gt;Experience with a statically typed language such as Go, Java, or C++&lt;/li&gt;\n&lt;li&gt;Familiarity with relational databases and SQL&lt;/li&gt;\n&lt;li&gt;Exposure to Docker &amp;amp; Kubernetes is a plus&lt;/li&gt;\n&lt;/ul&gt;\n&lt;p&gt;&lt;strong&gt;Nice to have&lt;/strong&gt;&lt;/p&gt;\n&lt;ul&gt;&lt;li&gt;Distributed systems coursework&lt;/li&gt;&lt;li&gt;Open source contributions&lt;/li&gt;&lt;/ul&gt;\n&lt;p&gt;We sponsor H-1B and TN visas for this role.&lt;/p&gt;",
+  "pay_input_ranges": [
+    { "min_cents": 12000000, "max_cents": 15000000, "currency_type": "USD", "title": "Base salary" }
+  ]
+}

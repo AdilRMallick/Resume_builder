@@ -1,0 +1,50 @@
+Software Engineer, Machine Learning (University Grad) - Ledgerline
+
+Ledgerline detects fraud for mid-market lenders. Our models score about forty thousand loan
+applications a day, and a false negative costs a customer real money, so we care a great
+deal about being right and about being able to explain why we were right.
+
+The Applied ML team turns models into production services. We are not a research lab. The
+distance between an idea in a notebook and a decision in production is about two weeks here,
+and shortening that distance is most of the job.
+
+What you will work on
+
+- Train, evaluate, and ship supervised models for fraud and credit risk using Python,
+  PyTorch, and scikit-learn.
+- Build the feature pipelines those models depend on, in Spark and SQL.
+- Deploy models as services, monitor them for drift, and own the retraining schedule.
+- Write the offline evaluation that decides whether a model ships, including fairness and
+  disparate impact analysis.
+- Explain a model's behavior to a risk officer who has never written a line of code.
+
+Minimum qualifications
+
+- Bachelor's or Master's degree in Computer Science, Statistics, Mathematics, or a related
+  quantitative field, graduating between December 2025 and August 2026.
+- Strong programming skills in Python.
+- Coursework or project experience in machine learning, including a working understanding of
+  overfitting, regularization, and evaluation metrics beyond accuracy.
+- Familiarity with pandas and NumPy.
+- Proficiency in SQL for exploratory data analysis.
+- Ability to write clearly. Every model we ship is accompanied by a written evaluation.
+
+Preferred qualifications
+
+- Experience with PyTorch or TensorFlow on a project of nontrivial size.
+- Exposure to gradient boosted trees, particularly XGBoost or LightGBM, which remain the
+  workhorses of tabular fraud detection.
+- Familiarity with Apache Spark for large-scale feature computation.
+- Experience with MLflow or another experiment tracking system.
+- Some exposure to Docker and to deploying a model behind an API.
+- Interest in fraud, risk, or adversarial settings where the data distribution fights back.
+
+Interview process
+
+A recruiter call, a Python and SQL screen, and a virtual onsite with four rounds: applied ML
+depth, a coding round, an ML system design round, and a conversation about a project you
+have done. We share the rubric with you beforehand because we do not think secrecy makes the
+signal better.
+
+Ledgerline participates in E-Verify. This role is based in Chicago, Illinois with a hybrid
+schedule of three days in the office.

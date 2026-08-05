@@ -1,0 +1,26 @@
+{
+  "company": "Cobalt Health",
+  "title": "Software Engineer I, Full Stack",
+  "requirements": [
+    {"raw_text": "React", "importance": "required"},
+    {"raw_text": "TypeScript", "importance": "required"},
+    {"raw_text": "JavaScript", "importance": "required"},
+    {"raw_text": "REST APIs", "importance": "mentioned"},
+    {"raw_text": "FastAPI", "importance": "mentioned"},
+    {"raw_text": "Python", "importance": "required"},
+    {"raw_text": "pytest", "importance": "mentioned"},
+    {"raw_text": "Playwright", "importance": "mentioned"},
+    {"raw_text": "CI/CD", "importance": "required"},
+    {"raw_text": "A degree in Computer Science", "importance": "required"},
+    {"raw_text": "HTML", "importance": "required"},
+    {"raw_text": "CSS", "importance": "required"},
+    {"raw_text": "communication skills", "importance": "required"},
+    {"raw_text": "reading code you did not write", "importance": "required"},
+    {"raw_text": "Docker", "importance": "preferred"},
+    {"raw_text": "HL7", "importance": "preferred"},
+    {"raw_text": "FHIR", "importance": "preferred"},
+    {"raw_text": "PostgreSQL", "importance": "preferred"},
+    {"raw_text": "WCAG", "importance": "preferred"},
+    {"raw_text": "open source contribution", "importance": "preferred"}
+  ]
+}

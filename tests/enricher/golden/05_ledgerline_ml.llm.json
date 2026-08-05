@@ -1,0 +1,22 @@
+{
+  "requirements": [
+    {"raw_text": "Strong programming skills in Python", "importance": "required", "confidence": 0.95},
+    {"raw_text": "PyTorch", "importance": "required", "confidence": 0.85},
+    {"raw_text": "scikit-learn", "importance": "mentioned", "confidence": 0.7},
+    {"raw_text": "Spark", "importance": "mentioned", "confidence": 0.7},
+    {"raw_text": "Proficiency in SQL", "importance": "required", "confidence": 0.9},
+    {"raw_text": "Bachelor's or Master's degree in Computer Science, Statistics, Mathematics, or a related quantitative field", "importance": "required", "confidence": 0.95},
+    {"raw_text": "Coursework or project experience in machine learning", "importance": "required", "confidence": 0.9},
+    {"raw_text": "overfitting, regularization, and evaluation metrics", "importance": "required", "confidence": 0.7},
+    {"raw_text": "pandas", "importance": "required", "confidence": 0.85},
+    {"raw_text": "NumPy", "importance": "required", "confidence": 0.85},
+    {"raw_text": "Ability to write clearly", "importance": "required", "confidence": 0.7},
+    {"raw_text": "TensorFlow", "importance": "preferred", "confidence": 0.8},
+    {"raw_text": "gradient boosted trees", "importance": "preferred", "confidence": 0.7},
+    {"raw_text": "XGBoost", "importance": "preferred", "confidence": 0.75},
+    {"raw_text": "LightGBM", "importance": "preferred", "confidence": 0.75},
+    {"raw_text": "MLflow", "importance": "preferred", "confidence": 0.7},
+    {"raw_text": "Docker", "importance": "preferred", "confidence": 0.7},
+    {"raw_text": "monitor them for drift", "importance": "mentioned", "confidence": 0.5}
+  ]
+}

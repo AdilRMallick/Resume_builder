@@ -1,0 +1,36 @@
+{
+  "apiVersion": "1",
+  "organizationName": "Halcyon Labs",
+  "jobs": [
+    {
+      "id": "11111111-2222-3333-4444-555555555555",
+      "title": "Data Engineer",
+      "department": "Data",
+      "team": "Ingest",
+      "employmentType": "FullTime",
+      "location": "New York, NY",
+      "isRemote": false,
+      "isListed": true,
+      "publishedAt": "2026-05-02T00:00:00.000Z",
+      "jobUrl": "https://jobs.ashbyhq.com/halcyon/11111111-2222-3333-4444-555555555555",
+      "descriptionHtml": "<p>Not the posting under test.</p>",
+      "descriptionPlain": "Not the posting under test."
+    },
+    {
+      "id": "9a8b7c6d-5e4f-4a3b-9c8d-7e6f5a4b3c2d",
+      "title": "Software Engineer I, Platform",
+      "department": "Engineering",
+      "team": "Platform",
+      "employmentType": "FullTime",
+      "location": "Ann Arbor, MI",
+      "secondaryLocations": [{ "location": "Remote - United States" }],
+      "isRemote": true,
+      "isListed": true,
+      "publishedAt": "2026-06-01T00:00:00.000Z",
+      "jobUrl": "https://jobs.ashbyhq.com/halcyon/9a8b7c6d-5e4f-4a3b-9c8d-7e6f5a4b3c2d",
+      "applyUrl": "https://jobs.ashbyhq.com/halcyon/9a8b7c6d-5e4f-4a3b-9c8d-7e6f5a4b3c2d/application",
+      "descriptionHtml": "<div><h2>About Halcyon Labs</h2><p>We build observability tooling for streaming data.</p><style>.x{color:red}</style><h2>Requirements</h2><ul><li>Graduating in 2027 with a degree in Computer Science or equivalent experience</li><li>Working knowledge of Python and one of Go, Rust, or Java</li><li>Exposure to Kafka, Spark, or another streaming system</li></ul><p>We are unable to sponsor work visas at this time.</p></div>",
+      "compensation": { "compensationTierSummary": "$110K - $135K" }
+    }
+  ]
+}

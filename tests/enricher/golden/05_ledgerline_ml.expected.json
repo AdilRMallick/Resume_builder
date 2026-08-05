@@ -1,0 +1,27 @@
+{
+  "company": "Ledgerline",
+  "title": "Software Engineer, Machine Learning (University Grad)",
+  "requirements": [
+    {"raw_text": "Python", "importance": "required"},
+    {"raw_text": "PyTorch", "importance": "required"},
+    {"raw_text": "scikit-learn", "importance": "mentioned"},
+    {"raw_text": "SQL", "importance": "required"},
+    {"raw_text": "Bachelor's or Master's degree in Computer Science", "importance": "required"},
+    {"raw_text": "machine learning", "importance": "required"},
+    {"raw_text": "overfitting, regularization", "importance": "required"},
+    {"raw_text": "pandas", "importance": "required"},
+    {"raw_text": "NumPy", "importance": "required"},
+    {"raw_text": "Ability to write clearly", "importance": "required"},
+    {"raw_text": "fairness and disparate impact analysis", "importance": "required"},
+    {"raw_text": "graduating between December 2025 and August 2026", "importance": "required"},
+    {"raw_text": "TensorFlow", "importance": "preferred"},
+    {"raw_text": "gradient boosted trees", "importance": "preferred"},
+    {"raw_text": "XGBoost", "importance": "preferred"},
+    {"raw_text": "LightGBM", "importance": "preferred"},
+    {"raw_text": "Apache Spark", "importance": "preferred"},
+    {"raw_text": "MLflow", "importance": "preferred"},
+    {"raw_text": "Docker", "importance": "preferred"},
+    {"raw_text": "deploying a model behind an API", "importance": "preferred"},
+    {"raw_text": "drift", "importance": "mentioned"}
+  ]
+}

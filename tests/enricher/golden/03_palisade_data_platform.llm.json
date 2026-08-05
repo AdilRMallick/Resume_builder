@@ -1,0 +1,21 @@
+{
+  "requirements": [
+    {"raw_text": "Apache Airflow", "importance": "required", "confidence": 0.9},
+    {"raw_text": "Strong programming ability in Python", "importance": "required", "confidence": 0.95},
+    {"raw_text": "Demonstrated proficiency in SQL", "importance": "required", "confidence": 0.95},
+    {"raw_text": "Snowflake", "importance": "preferred", "confidence": 0.85},
+    {"raw_text": "Kafka", "importance": "mentioned", "confidence": 0.7},
+    {"raw_text": "Apache Flink", "importance": "mentioned", "confidence": 0.7},
+    {"raw_text": "data quality checks", "importance": "mentioned", "confidence": 0.6},
+    {"raw_text": "Bachelor's or Master's degree in Computer Science", "importance": "required", "confidence": 0.95},
+    {"raw_text": "joins, window functions, and query optimization", "importance": "required", "confidence": 0.85},
+    {"raw_text": "Coursework or project experience in databases or distributed systems", "importance": "required", "confidence": 0.8},
+    {"raw_text": "communicate technical tradeoffs clearly to non-technical stakeholders", "importance": "required", "confidence": 0.75},
+    {"raw_text": "Apache Spark", "importance": "preferred", "confidence": 0.8},
+    {"raw_text": "dbt", "importance": "preferred", "confidence": 0.75},
+    {"raw_text": "Terraform", "importance": "preferred", "confidence": 0.7},
+    {"raw_text": "dimensional modeling and slowly changing dimensions", "importance": "preferred", "confidence": 0.65},
+    {"raw_text": "BigQuery", "importance": "preferred", "confidence": 0.6},
+    {"raw_text": "Redshift", "importance": "preferred", "confidence": 0.6}
+  ]
+}

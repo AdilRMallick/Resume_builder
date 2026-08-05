@@ -1,0 +1,91 @@
+[
+  {
+    "source": "hand-written",
+    "category": "Software",
+    "company_name": "No Id Co.",
+    "id": "",
+    "title": "Backend Engineer (New Grad)",
+    "active": true,
+    "date_updated": 1765079461,
+    "date_posted": 1765079461,
+    "url": "https://www.noidco.com/careers/backend-engineer/",
+    "locations": [
+      "Chicago, IL"
+    ],
+    "company_url": "https://simplify.jobs/c/NoIdCo",
+    "is_visible": true,
+    "sponsorship": "Other",
+    "degrees": []
+  },
+  {
+    "source": "hand-written",
+    "category": "Software",
+    "company_name": "Missing Url Co",
+    "id": "99999999-9999-4999-8999-999999999999",
+    "title": "Software Engineer",
+    "active": true,
+    "date_updated": 1765079461,
+    "date_posted": 1765079461,
+    "url": "",
+    "locations": [],
+    "company_url": "",
+    "is_visible": true,
+    "sponsorship": "Other",
+    "degrees": []
+  },
+  {
+    "source": "hand-written",
+    "category": "Hardware",
+    "company_name": "Hidden Co",
+    "id": "88888888-8888-4888-8888-888888888888",
+    "title": "ASIC Design Engineer – New College Grad 2026",
+    "active": true,
+    "date_updated": 0,
+    "date_posted": 0,
+    "url": "https://jobs.smartrecruiters.com/HiddenCo/12345",
+    "locations": [
+      "Remote"
+    ],
+    "company_url": "https://simplify.jobs/c/HiddenCo",
+    "is_visible": false,
+    "sponsorship": "Other",
+    "degrees": []
+  },
+  {
+    "source": "hand-written",
+    "category": "Software",
+    "company_name": "Dupe Co",
+    "id": "77777777-7777-4777-8777-777777777777",
+    "title": "Software Engineer, First Version",
+    "active": true,
+    "date_updated": 1765079461,
+    "date_posted": 1765079461,
+    "url": "https://jobs.lever.co/dupeco/aaa",
+    "locations": [
+      "NYC"
+    ],
+    "company_url": "https://simplify.jobs/c/DupeCo",
+    "is_visible": true,
+    "sponsorship": "Other",
+    "degrees": []
+  },
+  {
+    "source": "hand-written",
+    "category": "Software",
+    "company_name": "Dupe Co",
+    "id": "77777777-7777-4777-8777-777777777777",
+    "title": "Software Engineer, Second Version Wins",
+    "active": true,
+    "date_updated": 1765079999,
+    "date_posted": 1765079999,
+    "url": "https://jobs.lever.co/dupeco/aaa",
+    "locations": [
+      "NYC"
+    ],
+    "company_url": "https://simplify.jobs/c/DupeCo",
+    "is_visible": true,
+    "sponsorship": "Other",
+    "degrees": []
+  },
+  "this is not an object at all"
+]

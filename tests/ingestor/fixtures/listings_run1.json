@@ -1,0 +1,81 @@
+[
+  {
+    "source": "Simplify",
+    "category": "Software",
+    "company_name": "Acme Corp.",
+    "id": "aaaaaaaa-1111-4aaa-8aaa-aaaaaaaaaaaa",
+    "title": "Software Engineer, New Grad",
+    "active": true,
+    "date_updated": 1765365281,
+    "date_posted": 1765365281,
+    "url": "https://job-boards.greenhouse.io/acme/jobs/4597297006",
+    "locations": [
+      "Detroit, MI",
+      "Ann Arbor, MI"
+    ],
+    "company_url": "https://simplify.jobs/c/Acme",
+    "is_visible": true,
+    "sponsorship": "Offers Sponsorship",
+    "degrees": [
+      "Bachelor's"
+    ]
+  },
+  {
+    "source": "Simplify",
+    "category": "Software",
+    "company_name": "Globex",
+    "id": "bbbbbbbb-2222-4bbb-8bbb-bbbbbbbbbbbb",
+    "title": "Software Engineer – New Grad Summer 2026",
+    "active": true,
+    "date_updated": 1765385275,
+    "date_posted": 1765385275,
+    "url": "https://jobs.lever.co/globex/6ce4c517-ed15-4308-b1b3-db9ed7be5a53",
+    "locations": [
+      "Remote in USA"
+    ],
+    "company_url": "https://simplify.jobs/c/Globex",
+    "is_visible": true,
+    "sponsorship": "Other",
+    "degrees": []
+  },
+  {
+    "source": "Simplify",
+    "category": "Quant",
+    "company_name": "Initech",
+    "id": "cccccccc-3333-4ccc-8ccc-cccccccccccc",
+    "title": "Quantitative Researcher",
+    "active": true,
+    "date_updated": 1765840442,
+    "date_posted": 1765840442,
+    "url": "https://boards.greenhouse.io/initech/jobs/1234567",
+    "locations": [
+      "NYC",
+      "Chicago, IL"
+    ],
+    "company_url": "https://simplify.jobs/c/Initech",
+    "is_visible": true,
+    "sponsorship": "U.S. Citizenship is Required",
+    "degrees": [
+      "Master's",
+      "PhD"
+    ]
+  },
+  {
+    "source": "AlmondCroffle",
+    "category": "Software",
+    "company_name": "Umbrella",
+    "id": "dddddddd-4444-4ddd-8ddd-dddddddddddd",
+    "title": "Full-Stack Java / Spring Boot Developer",
+    "active": false,
+    "date_updated": 1765079461,
+    "date_posted": 1765079461,
+    "url": "https://umbrella.wd5.myworkdayjobs.com/careers/job/Detroit/Full-Stack-Developer_10121013",
+    "locations": [
+      "Detroit, MI"
+    ],
+    "company_url": "https://simplify.jobs/c/Umbrella",
+    "is_visible": true,
+    "sponsorship": "Does Not Offer Sponsorship",
+    "degrees": []
+  }
+]

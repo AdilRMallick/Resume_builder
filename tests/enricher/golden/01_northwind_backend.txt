@@ -1,0 +1,60 @@
+Software Engineer, Backend (New Grad) - Northwind Systems
+
+About the role
+
+Northwind Systems builds the settlement layer that moves money between regional banks and
+the fintechs that sit on top of them. The Payments Core team owns the services that accept,
+validate, and settle roughly four million transactions a day. We are hiring new graduates
+onto the team for a summer 2026 start.
+
+You will spend your first six months owning a real service. Recent new grads on the team
+have shipped an idempotency layer for our transfer API, cut p99 latency on the ledger read
+path by 60%, and rewritten the reconciliation job that closes our books every night.
+
+What you will do
+
+- Design, build, and operate backend services in Go and Python that process payment
+  instructions end to end.
+- Model and evolve schemas in PostgreSQL, and write the migrations that get them there
+  without downtime.
+- Participate in code review as both an author and a reviewer. Every change we ship is
+  reviewed by someone else on the team.
+- Take part in the team on-call rotation after your first three months, with a senior
+  engineer shadowing you for the first two shifts.
+- Write and maintain integration tests for the systems you own.
+
+Basic qualifications
+
+- Bachelor's degree in Computer Science or a related technical field, completed by
+  August 2026.
+- Proficiency in at least one statically typed language such as Go, Java, or C++.
+- Solid grounding in data structures, algorithms, and complexity analysis.
+- Working knowledge of SQL and relational database design.
+- Experience with version control and collaborative development using Git.
+- Strong written communication skills; we are a documentation-heavy team and most decisions
+  are made in writing.
+
+Preferred qualifications
+
+- Internship or co-op experience building server-side software.
+- Familiarity with Kubernetes or another container orchestration system.
+- Exposure to distributed systems concepts: consensus, replication, idempotency, or
+  exactly-once delivery.
+- Experience with Apache Kafka or a comparable event streaming platform.
+- Interest in payments, ledgers, or financial infrastructure.
+
+Our stack
+
+Go and Python services deployed to Kubernetes on AWS, PostgreSQL and Redis for state,
+Kafka for the event bus, Terraform for infrastructure, and Datadog for observability. You
+are not expected to know all of this on day one. You are expected to be curious about the
+parts you have not seen.
+
+Compensation and benefits
+
+Base salary of $145,000 to $165,000, an annual bonus target of 10%, equity, unlimited PTO,
+and full medical, dental, and vision coverage from your first day.
+
+Northwind Systems is an equal opportunity employer. We do not discriminate on the basis of
+race, religion, color, national origin, gender, sexual orientation, age, marital status,
+veteran status, or disability status.
