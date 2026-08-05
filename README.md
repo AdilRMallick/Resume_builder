@@ -82,6 +82,11 @@ Nothing above needs an API key. The default embedding provider is `hash` — a
 deterministic offline hash embedder — so the whole pipeline runs, and the whole test
 suite passes, with no credentials and no network.
 
+**No Docker?** `sudo make dev-setup` installs Postgres with pgvector and Redis natively
+on Debian/Ubuntu and binds them to the same ports docker-compose publishes (5433 and
+6380), so nothing else has to change. `make verify-services` checks both are reachable.
+Use it on CI runners and cloud sandboxes; on a normal dev machine prefer `make up`.
+
 ---
 
 ## The pipeline, end to end

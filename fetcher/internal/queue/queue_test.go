@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"os"
 	"sync"
 	"testing"
 	"time"
@@ -14,19 +15,33 @@ import (
 	"github.com/adilmallick/job-match-engine/fetcher/internal/domain"
 )
 
-const testRedisURL = "redis://localhost:6380/9"
+// Database 9, not 0: test streams stay out of the database a dev's own fetcher is
+// using, so a local run and a test run cannot see each other's messages.
+const defaultTestRedisURL = "redis://localhost:6380/9"
+
+// testRedisURL matches the Go store suite's JME_TEST_DATABASE_URL_GO convention, so a
+// machine that cannot bind the docker-compose ports -- a CI runner or a cloud sandbox
+// with Redis on 6379 -- can point the suite somewhere else instead of patching this
+// file.
+func testRedisURL() string {
+	if url := os.Getenv("JME_TEST_REDIS_URL_GO"); url != "" {
+		return url
+	}
+	return defaultTestRedisURL
+}
 
 func testClient(t *testing.T) *redis.Client {
 	t.Helper()
-	opts, err := redis.ParseURL(testRedisURL)
+	url := testRedisURL()
+	opts, err := redis.ParseURL(url)
 	if err != nil {
-		t.Fatalf("parse redis url: %v", err)
+		t.Fatalf("parse redis url %q: %v", url, err)
 	}
 	client := redis.NewClient(opts)
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 	if err := client.Ping(ctx).Err(); err != nil {
-		t.Skipf("no Redis at %s (run `docker compose up -d`): %v", testRedisURL, err)
+		t.Skipf("no Redis at %s (run `docker compose up -d`): %v", url, err)
 	}
 	return client
 }
