@@ -48,7 +48,14 @@ def db_engine():
         admin.dispose()
 
     if not _postgres_available(TEST_DB_URL):
-        pytest.skip("no Postgres at JME_TEST_DATABASE_URL; run `docker compose up -d`")
+        message = f"no Postgres at {TEST_DB_URL}; run `docker compose up -d`"
+        # On a laptop, skipping is right: a unit-test run should not demand a database.
+        # In CI it is a trap -- a service container that failed to come up would turn
+        # the whole integration suite into skips and the job would still report green.
+        # JME_REQUIRE_SERVICES is how CI says "the services are supposed to be here".
+        if os.environ.get("JME_REQUIRE_SERVICES"):
+            raise RuntimeError(f"JME_REQUIRE_SERVICES is set but {message}")
+        pytest.skip(message)
 
     engine = create_engine(TEST_DB_URL)
 

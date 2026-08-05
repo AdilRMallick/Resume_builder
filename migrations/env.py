@@ -17,6 +17,23 @@ config.set_main_option("sqlalchemy.url", get_settings().database_url)
 
 target_metadata = Base.metadata
 
+#: Indexes that exist in the database but deliberately not in the ORM metadata.
+#:
+#: The HNSW index on `evidence_chunk.embedding` is created with raw DDL in
+#: a5be80babd8c because SQLAlchemy's Index() cannot express the pgvector operator
+#: class (`vector_cosine_ops`). Autogenerate compares the live schema against the
+#: metadata, sees an index it cannot account for, and proposes DROPping it -- so
+#: without this exclusion, `alembic revision --autogenerate` would quietly generate a
+#: migration that deletes the index the whole similarity search depends on.
+_UNMANAGED_INDEXES = frozenset({"ix_evidence_chunk_embedding_hnsw"})
+
+
+def include_object(obj, name, type_, reflected, compare_to) -> bool:
+    """Keep autogenerate's hands off objects the ORM cannot describe."""
+    if type_ == "index" and name in _UNMANAGED_INDEXES:
+        return False
+    return True
+
 
 def run_migrations_offline() -> None:
     context.configure(
@@ -25,6 +42,7 @@ def run_migrations_offline() -> None:
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
         compare_type=True,
+        include_object=include_object,
     )
     with context.begin_transaction():
         context.run_migrations()
@@ -41,6 +59,7 @@ def run_migrations_online() -> None:
             connection=connection,
             target_metadata=target_metadata,
             compare_type=True,
+            include_object=include_object,
         )
         with context.begin_transaction():
             context.run_migrations()

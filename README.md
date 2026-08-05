@@ -1,5 +1,7 @@
 # Job Match Engine
 
+[![CI](https://github.com/AdilRMallick/Resume_builder/actions/workflows/ci.yml/badge.svg)](https://github.com/AdilRMallick/Resume_builder/actions/workflows/ci.yml)
+
 Personal system that ingests the SimplifyJobs new-grad feed, resolves job descriptions,
 matches them against an evidence corpus of my actual work, and reports aggregate skill
 gaps.
