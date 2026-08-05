@@ -41,6 +41,12 @@ func testClient(t *testing.T) *redis.Client {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 	if err := client.Ping(ctx).Err(); err != nil {
+		// Skipping is right locally and wrong in CI: a Redis service that failed to
+		// start would turn this whole suite into skips and still report success.
+		// JME_REQUIRE_SERVICES is CI asserting the services are supposed to be there.
+		if os.Getenv("JME_REQUIRE_SERVICES") != "" {
+			t.Fatalf("JME_REQUIRE_SERVICES is set but no Redis at %s: %v", url, err)
+		}
 		t.Skipf("no Redis at %s (run `docker compose up -d`): %v", url, err)
 	}
 	return client

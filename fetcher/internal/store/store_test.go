@@ -24,6 +24,11 @@ func testStore(t *testing.T) *Store {
 
 	s, err := New(ctx, testDSN())
 	if err != nil {
+		// See the note in the queue suite: skipping is right on a laptop and a false
+		// green in CI, where JME_REQUIRE_SERVICES asserts the services must exist.
+		if os.Getenv("JME_REQUIRE_SERVICES") != "" {
+			t.Fatalf("JME_REQUIRE_SERVICES is set but no Postgres at %s: %v", testDSN(), err)
+		}
 		t.Skipf("no Postgres at %s (run `docker compose up -d`): %v", testDSN(), err)
 	}
 	t.Cleanup(s.Close)

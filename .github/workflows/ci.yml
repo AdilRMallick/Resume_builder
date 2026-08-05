@@ -1,0 +1,157 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A second push to the same PR makes the first run's result irrelevant.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  python:
+    name: python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.11 is the floor declared in pyproject; 3.13 is what the project is
+        # developed on. Testing both ends catches the version-specific breakage that
+        # testing one end hides.
+        python-version: ["3.11", "3.13"]
+
+    # Ports match docker-compose (5433, 6380) rather than the images' defaults, because
+    # every service URL default in the codebase points there. Matching them means no
+    # environment variables are needed for the suite to find its services.
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: jme
+          POSTGRES_PASSWORD: jme
+          POSTGRES_DB: jme
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U jme -d jme"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6380:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Lint
+        run: python -m ruff check jme tests
+
+      - name: Apply migrations
+        run: python -m alembic upgrade head
+
+      - name: Check for model/migration drift
+        # Fails if the ORM models have moved on without a migration. The pgvector HNSW
+        # index is excluded from this comparison in migrations/env.py -- see the note
+        # there for why.
+        run: python -m alembic check
+
+      - name: Test
+        env:
+          # The integration tests self-skip when Postgres is missing, which is right on
+          # a laptop and a false green here. This makes a missing service a failure.
+          JME_REQUIRE_SERVICES: "1"
+        run: python -m pytest -q --strict-markers
+
+  go:
+    name: go
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: jme
+          POSTGRES_PASSWORD: jme
+          POSTGRES_DB: jme
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U jme -d jme"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6380:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          # Read the version from go.mod so this cannot drift from what the module
+          # declares.
+          go-version-file: fetcher/go.mod
+          cache-dependency-path: fetcher/go.sum
+
+      # The Go store suite reads and writes real tables; it does not create them. The
+      # schema is owned by Alembic on the Python side, so CI applies it here too.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Apply migrations
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e .
+          python -m alembic upgrade head
+
+      - name: gofmt
+        working-directory: fetcher
+        run: |
+          unformatted="$(gofmt -l .)"
+          if [ -n "$unformatted" ]; then
+            echo "gofmt would change these files:"
+            echo "$unformatted"
+            exit 1
+          fi
+
+      - name: Vet
+        working-directory: fetcher
+        run: go vet ./...
+
+      - name: Test
+        working-directory: fetcher
+        env:
+          # Same reasoning as the Python job: the queue and store suites skip when their
+          # services are absent, so CI has to assert the services are there.
+          JME_REQUIRE_SERVICES: "1"
+        run: go test ./... -count=1
