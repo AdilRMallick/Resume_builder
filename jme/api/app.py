@@ -19,9 +19,11 @@ from __future__ import annotations
 
 import datetime as dt
 from collections.abc import Iterator
+from pathlib import Path
 from typing import Annotated, Any
 
 from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi.responses import HTMLResponse
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
@@ -67,6 +69,9 @@ def get_session() -> Iterator[Session]:
 
 SessionDep = Annotated[Session, Depends(get_session)]
 
+#: The dashboard. A single file with no build step, served as-is.
+DASHBOARD = Path(__file__).with_name("static") / "index.html"
+
 
 def create_app() -> FastAPI:
     app = FastAPI(
@@ -74,6 +79,28 @@ def create_app() -> FastAPI:
         version="0.1.0",
         description="Read-only view over the postings, requirements, matches, and gap report.",
     )
+
+    # ----------------------------------------------------------------------------------
+    # dashboard
+    # ----------------------------------------------------------------------------------
+
+    @app.get("/", include_in_schema=False, response_class=HTMLResponse)
+    def dashboard() -> HTMLResponse:
+        """The read-only dashboard.
+
+        Served as a route rather than a StaticFiles mount, because mounting at `/` would
+        shadow every API path below it. The page holds no data of its own: it fetches the
+        same JSON endpoints as everything else, so it cannot show a number the API does
+        not agree with.
+        """
+        try:
+            return HTMLResponse(DASHBOARD.read_text(encoding="utf-8"))
+        except OSError as exc:
+            # An install that lost its package data should say so, not 500 blankly.
+            log.error("dashboard_missing", path=str(DASHBOARD), error=str(exc))
+            raise HTTPException(
+                status_code=500, detail=f"dashboard asset missing at {DASHBOARD}"
+            ) from exc
 
     # ----------------------------------------------------------------------------------
     # health
