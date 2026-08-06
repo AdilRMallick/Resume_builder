@@ -106,6 +106,17 @@ jme report gap                # ← the payoff
 
 Every stage is independently runnable and independently useful.
 
+For the same numbers in a browser:
+
+```bash
+jme serve start               # then open http://127.0.0.1:8000
+```
+
+The dashboard at `/` is a read-only view of the gap report, the shortlist, and queue
+depth. It is one HTML file with no build step, no framework and no CDN, and it holds no
+data of its own — every panel fetches the same JSON endpoints the CLI uses, so it cannot
+show a number the API disagrees with.
+
 ---
 
 ## Layout

@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Job Match Engine</title>
+<!--
+  One file, no build step, no framework, no CDN. Everything it renders comes from the
+  same JSON endpoints the CLI and the tests use, fetched same-origin, so the dashboard
+  cannot show a number the API does not agree with. tests/api/test_ui.py asserts both
+  properties: that every path fetched here exists on the app, and that nothing external
+  is referenced.
+-->
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #ffffff; --fg: #1a1a1a; --muted: #6b7280; --line: #e5e7eb;
+    --panel: #f9fafb; --accent: #1d4ed8; --warn: #b45309; --bad: #b91c1c; --good: #15803d;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0f1115; --fg: #e6e6e6; --muted: #9ca3af; --line: #262a33;
+      --panel: #161922; --accent: #60a5fa; --warn: #fbbf24; --bad: #f87171; --good: #4ade80;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 2rem 1.5rem 4rem; background: var(--bg); color: var(--fg);
+    font: 14px/1.5 ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+  main { max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 1.25rem; margin: 0; letter-spacing: -0.01em; }
+  h2 { font-size: 0.95rem; margin: 2.5rem 0 0.75rem; text-transform: uppercase;
+       letter-spacing: 0.08em; color: var(--muted); display: flex; gap: 0.75rem;
+       align-items: baseline; flex-wrap: wrap; }
+  /* The note sits inside the h2 for layout, but it is prose, not a heading: undo the
+     uppercasing and tracking or the numbers become unreadable. */
+  h2 .note { text-transform: none; letter-spacing: normal; font-weight: 400;
+             font-size: 12px; }
+  h2 label { text-transform: none; letter-spacing: normal; font-size: 12px;
+             margin-left: auto; cursor: pointer; user-select: none; }
+  header { display: flex; align-items: baseline; gap: 1rem; flex-wrap: wrap;
+           border-bottom: 1px solid var(--line); padding-bottom: 1rem; }
+  header .sub { color: var(--muted); }
+  button {
+    font: inherit; color: var(--fg); background: var(--panel); cursor: pointer;
+    border: 1px solid var(--line); border-radius: 4px; padding: 0.3rem 0.7rem;
+  }
+  button:hover { border-color: var(--accent); color: var(--accent); }
+  .row { display: flex; gap: 1rem; align-items: baseline; flex-wrap: wrap; }
+  .spacer { margin-left: auto; }
+  .scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+  th, td { text-align: left; padding: 0.4rem 0.75rem 0.4rem 0; white-space: nowrap;
+           border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 600; }
+  td.num, th.num { text-align: right; padding-right: 1.25rem; }
+  td.wrap { white-space: normal; min-width: 18rem; }
+  a { color: var(--accent); }
+  .pill { border: 1px solid currentColor; border-radius: 999px; padding: 0.05rem 0.5rem;
+          font-size: 12px; }
+  .ok { color: var(--good); } .warn { color: var(--warn); } .bad { color: var(--bad); }
+  .muted { color: var(--muted); }
+  .err { color: var(--bad); border: 1px solid currentColor; border-radius: 4px;
+         padding: 0.5rem 0.75rem; }
+  footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--line);
+           color: var(--muted); font-size: 12px; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Job Match Engine</h1>
+    <span class="sub" id="health">checking…</span>
+    <span class="spacer"></span>
+    <button id="refresh" type="button">refresh</button>
+  </header>
+
+  <h2>Skill gaps <span class="note" id="gaps-note"></span>
+    <label><input type="checkbox" id="include-covered"> show covered skills too</label>
+  </h2>
+  <div class="scroll"><div id="gaps">loading…</div></div>
+
+  <h2>Shortlist <span class="note" id="shortlist-note"></span></h2>
+  <div class="scroll"><div id="shortlist">loading…</div></div>
+
+  <h2>Queues</h2>
+  <div class="scroll"><div id="queue">loading…</div></div>
+
+  <footer>
+    Read-only view over the same endpoints the CLI uses. Writes happen in workers, with
+    transactions and idempotency rules around them — see ARCHITECTURE.md section 10.
+    <a href="/docs">API docs</a>
+  </footer>
+</main>
+
+<script>
+"use strict";
+
+const el = (id) => document.getElementById(id);
+const text = (v) => (v === null || v === undefined || v === "" ? "—" : String(v));
+
+function table(columns, rows) {
+  if (!rows.length) return '<p class="muted">nothing to show</p>';
+  const head = columns.map((c) => `<th class="${c.num ? "num" : ""}">${c.label}</th>`).join("");
+  const body = rows
+    .map((row, index) => {
+      const cells = columns
+        .map((c) => {
+          const cls = [c.num ? "num" : "", c.wrap ? "wrap" : ""].filter(Boolean).join(" ");
+          return `<td class="${cls}">${c.cell(row, index)}</td>`;
+        })
+        .join("");
+      return `<tr>${cells}</tr>`;
+    })
+    .join("");
+  return `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+}
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (ch) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch])
+  );
+}
+
+function link(url, label) {
+  if (!url) return escapeHTML(label);
+  return `<a href="${escapeHTML(url)}" target="_blank" rel="noreferrer">${escapeHTML(label)}</a>`;
+}
+
+// Each panel loads and fails independently: a dead queue connection should not blank
+// the gap report, which is the thing this whole system exists to produce.
+async function load(path, target, render) {
+  try {
+    const response = await fetch(path, { headers: { accept: "application/json" } });
+    if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+    render(await response.json());
+  } catch (error) {
+    el(target).innerHTML = `<p class="err">${escapeHTML(path)} — ${escapeHTML(error.message)}</p>`;
+  }
+}
+
+const STATUS_CLASS = { evidenced: "ok", weak: "warn", absent: "bad" };
+
+function renderGaps(data) {
+  // eligible_postings and taxonomy_coverage live under `counts`, not at the top level.
+  const counts = data.counts || {};
+  const unmapped = counts.requirements_unmapped
+    ? ` · ${counts.requirements_unmapped} unmapped requirements are invisible below`
+    : "";
+  el("gaps-note").textContent =
+    `${text(counts.eligible_postings)} eligible postings · evidence v${text(data.evidence_version)}` +
+    ` · taxonomy coverage ${((counts.taxonomy_coverage || 0) * 100).toFixed(1)}%` +
+    ` · ${text(counts.gaps)} gaps, ${text(counts.covered)} covered` +
+    (data.query_seconds ? ` · ${(data.query_seconds * 1000).toFixed(0)} ms` : "") +
+    unmapped;
+  el("gaps").innerHTML = table(
+    [
+      { label: "#", num: true, cell: (_row, index) => index + 1 },
+      { label: "skill", cell: (r) => escapeHTML(r.skill) },
+      { label: "category", cell: (r) => `<span class="muted">${escapeHTML(r.category)}</span>` },
+      { label: "required", num: true, cell: (r) => r.required_count },
+      { label: "preferred", num: true, cell: (r) => r.preferred_count },
+      { label: "postings", num: true, cell: (r) => r.posting_count },
+      {
+        label: "status",
+        cell: (r) =>
+          `<span class="pill ${STATUS_CLASS[r.status] || "muted"}">${escapeHTML(r.status)}</span>`,
+      },
+      {
+        label: "e / w / a",
+        num: true,
+        cell: (r) => `${r.evidenced_citations} / ${r.weak_citations} / ${r.absent_citations}`,
+      },
+    ],
+    // A corpus that covers everything has an empty gap list, which is the good outcome
+    // and a confusing empty table. The toggle appends the covered skills so the panel
+    // still shows the demand picture; the status pill keeps the two kinds distinct.
+    (data.gaps || []).concat(data.covered || [])
+  );
+}
+
+function renderShortlist(data) {
+  el("shortlist-note").textContent = data.run_id
+    ? `${data.run_id} · ${data.count} postings`
+    : "no ranking run yet";
+  el("shortlist").innerHTML = table(
+    [
+      { label: "#", num: true, cell: (r) => r.rank },
+      { label: "score", num: true, cell: (r) => r.coarse_score.toFixed(4) },
+      { label: "company", cell: (r) => escapeHTML(r.posting.company) },
+      { label: "title", wrap: true, cell: (r) => link(r.posting.url, r.posting.title) },
+      {
+        label: "location",
+        wrap: true,
+        cell: (r) =>
+          escapeHTML(
+            (r.posting.locations || []).join(", ") || (r.posting.is_remote ? "Remote" : "")
+          ) || "—",
+      },
+      {
+        label: "jd",
+        cell: (r) =>
+          r.posting.has_jd
+            ? `<span class="muted">${escapeHTML(r.posting.jd_adapter || "yes")}</span>`
+            : '<span class="warn">none</span>',
+      },
+    ],
+    data.items || []
+  );
+}
+
+function renderQueue(data) {
+  el("queue").innerHTML = table(
+    [
+      { label: "stream", cell: (s) => escapeHTML(s.stream) },
+      { label: "group", cell: (s) => escapeHTML(s.group) },
+      { label: "depth", num: true, cell: (s) => text(s.depth) },
+      { label: "pending", num: true, cell: (s) => text(s.pending) },
+      { label: "consumers", num: true, cell: (s) => text(s.consumers) },
+      {
+        label: "oldest pending",
+        num: true,
+        cell: (s) =>
+          s.oldest_pending_age_sec === null || s.oldest_pending_age_sec === undefined
+            ? "—"
+            : `${s.oldest_pending_age_sec.toFixed(1)}s`,
+      },
+      {
+        label: "dead",
+        num: true,
+        cell: (s) =>
+          s.dead_letter_depth ? `<span class="bad">${s.dead_letter_depth}</span>` : "0",
+      },
+      {
+        label: "state",
+        wrap: true,
+        // NOGROUP is not a fault: it is what Redis says before the workers have ever
+        // run and created the consumer group. Reporting it in red trains you to ignore
+        // red. Anything else is a real error.
+        cell: (s) => {
+          if (!s.error) return '<span class="ok">ok</span>';
+          if (/NOGROUP/.test(s.error)) {
+            return '<span class="muted">not created yet — no worker has run</span>';
+          }
+          return `<span class="bad">${escapeHTML(s.error)}</span>`;
+        },
+      },
+    ],
+    data.streams || []
+  );
+}
+
+function renderHealth(data) {
+  const cls = data.status === "ok" ? "ok" : "bad";
+  const detail = data.error ? ` — ${escapeHTML(data.error)}` : "";
+  el("health").innerHTML =
+    `<span class="${cls}">${escapeHTML(data.status)}</span>` +
+    `<span class="muted"> · db ${escapeHTML(data.database)} · evidence v${text(data.evidence_version)}${detail}</span>`;
+}
+
+function refresh() {
+  const covered = el("include-covered").checked;
+  load("/health", "health", renderHealth);
+  load(covered ? "/gaps?top=25&include_covered=true" : "/gaps?top=25", "gaps", renderGaps);
+  load("/shortlist", "shortlist", renderShortlist);
+  load("/ops/queue", "queue", renderQueue);
+}
+
+el("refresh").addEventListener("click", refresh);
+el("include-covered").addEventListener("change", refresh);
+refresh();
+</script>
+</body>
+</html>
