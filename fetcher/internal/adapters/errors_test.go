@@ -42,6 +42,12 @@ func adaptersUnderTest() []adapterUnderTest {
 			malformed: `{"apiVersion":"1","jobs":{"not":"an array"}}`,
 		},
 		{
+			name:      "smartrecruiters",
+			make:      func(base string) Adapter { return NewSmartRecruiters(WithBaseURL(base)) },
+			url:       "https://jobs.smartrecruiters.com/NorthwindLabs/744000123456789-software-engineer",
+			malformed: `{"name":"Software Engineer","jobAd":{"sections":`,
+		},
+		{
 			name:      "fallback",
 			make:      func(string) Adapter { return NewFallback() },
 			url:       "", // filled in per test with the server URL

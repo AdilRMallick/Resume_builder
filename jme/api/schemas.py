@@ -4,9 +4,9 @@ These are the wire contract. ORM objects are never returned directly: the models
 columns the UI has no business seeing (raw feed JSON, whole JD bodies) and their shape
 changes for reasons that have nothing to do with the API.
 
-Everything here is a *response* model. There are no request bodies, because there are no
-writes - ARCHITECTURE section 10 rules out multi-user, auth, and tenancy, and a
-read-only surface is what makes that safe.
+Most models are response contracts. `TailorResumeRequest` is the one request body: it
+drives a stateless local computation and is never persisted. ARCHITECTURE section 10
+still rules out multi-user hosting, auth, and remote writes.
 """
 
 from __future__ import annotations
@@ -184,6 +184,120 @@ class GapReportOut(BaseModel):
     query_seconds: float
     gaps: list[GapSkill]
     covered: list[GapSkill] | None = None
+
+
+# --------------------------------------------------------------------------------------
+# daily digest
+# --------------------------------------------------------------------------------------
+
+
+class DigestCounts(BaseModel):
+    shortlisted: int
+    roles_returned: int
+    matched: int
+    stale_matches: int
+    unmatched: int
+    live_evidence_chunks: int
+    placeholder_evidence_chunks: int
+    gaps: int
+    gaps_returned: int
+    taxonomy_coverage: float
+
+
+class DigestCitationOut(BaseModel):
+    skill: str
+    status: str
+    evidence_chunk_id: int | None = None
+    source_ref: str | None = None
+    reasoning: str | None = None
+
+
+class DigestRoleOut(BaseModel):
+    rank: int
+    posting_id: int
+    company: str
+    title: str
+    url: str
+    coarse_score: float
+    match_id: int | None = None
+    verdict: str | None = None
+    match_score: float | None = None
+    rationale: str | None = None
+    match_stale: bool
+    computed_at: str | None = None
+    evidenced_count: int
+    weak_count: int
+    absent_count: int
+    citations: list[DigestCitationOut] = Field(default_factory=list)
+
+
+class DigestOut(BaseModel):
+    schema_version: str
+    kind: str
+    generated_at: str
+    shortlist_run_id: str | None = None
+    evidence_version: int
+    counts: DigestCounts
+    warnings: list[str] = Field(default_factory=list)
+    roles: list[DigestRoleOut] = Field(default_factory=list)
+    gaps: list[GapSkill] = Field(default_factory=list)
+    next_actions: list[str] = Field(default_factory=list)
+
+
+# --------------------------------------------------------------------------------------
+# resume studio
+# --------------------------------------------------------------------------------------
+
+
+class ResumeContactOut(BaseModel):
+    label: str
+    value: str
+    url: str | None = None
+
+
+class ResumeBulletOut(BaseModel):
+    text: str
+    tags: list[str] = Field(default_factory=list)
+
+
+class ResumeEntryOut(BaseModel):
+    organization: str
+    location: str = ""
+    title: str
+    dates: str
+    url: str | None = None
+    bullets: list[ResumeBulletOut] = Field(default_factory=list)
+
+
+class ResumeProfileOut(BaseModel):
+    name: str
+    headline: str
+    contact: list[ResumeContactOut] = Field(default_factory=list)
+    education: list[ResumeEntryOut] = Field(default_factory=list)
+    experience: list[ResumeEntryOut] = Field(default_factory=list)
+    projects: list[ResumeEntryOut] = Field(default_factory=list)
+    leadership: list[ResumeEntryOut] = Field(default_factory=list)
+    skills: dict[str, list[str]] = Field(default_factory=dict)
+    certifications: list[str] = Field(default_factory=list)
+
+
+class TailorResumeRequest(BaseModel):
+    job_description: str = Field(min_length=50, max_length=100_000)
+    title: str = Field(default="", max_length=512)
+    company: str = Field(default="", max_length=512)
+    url: str = Field(default="", max_length=4096)
+
+
+class ResumeTargetOut(BaseModel):
+    company: str = ""
+    title: str = ""
+    url: str = ""
+
+
+class TailoredResumeOut(ResumeProfileOut):
+    target: ResumeTargetOut
+    matched_skills: list[str] = Field(default_factory=list)
+    source_rule: str
 
 
 # --------------------------------------------------------------------------------------

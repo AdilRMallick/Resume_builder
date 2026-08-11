@@ -24,6 +24,55 @@ def test_health_reports_db_and_evidence_version(client, seed) -> None:
     assert body["error"] is None
 
 
+def test_resume_profile_contains_verified_bullet_bank(client) -> None:
+    response = client.get("/resume/profile")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["name"] == "Adil R. Mallick"
+    assert len(body["experience"]) == 3
+    assert len(body["projects"]) >= 3
+    assert all(bullet["tags"] for entry in body["projects"] for bullet in entry["bullets"])
+    serialized = response.text.lower()
+    assert "confirm:" not in serialized
+    assert "734-999-7794" not in serialized
+
+
+def test_resume_tailor_is_stateless_and_never_rewrites_bullets(client) -> None:
+    profile = client.get("/resume/profile").json()
+    source_bullets = {
+        bullet["text"]
+        for section in ("education", "experience", "projects", "leadership")
+        for entry in profile[section]
+        for bullet in entry["bullets"]
+    }
+    response = client.post(
+        "/resume/tailor",
+        json={
+            "company": "Example",
+            "title": "Python Backend Engineer",
+            "url": "https://example.com/job",
+            "job_description": "Python FastAPI Redis PostgreSQL Docker REST API AWS " * 8,
+        },
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body["target"]["title"] == "Python Backend Engineer"
+    assert body["projects"][0]["organization"] == "Job Match Engine"
+    assert body["source_rule"].endswith("no bullet was rewritten.")
+    output_bullets = {
+        bullet["text"]
+        for section in ("education", "experience", "projects", "leadership")
+        for entry in body[section]
+        for bullet in entry["bullets"]
+    }
+    assert output_bullets <= source_bullets
+
+
+def test_resume_tailor_rejects_an_empty_job_description(client) -> None:
+    response = client.post("/resume/tailor", json={"job_description": "too short"})
+    assert response.status_code == 422
+
+
 # --------------------------------------------------------------------------------------
 # postings
 # --------------------------------------------------------------------------------------
@@ -167,6 +216,36 @@ def test_gaps_rejects_a_nonsense_top(client, seed) -> None:
 
 
 # --------------------------------------------------------------------------------------
+# digest
+# --------------------------------------------------------------------------------------
+
+
+def test_digest_combines_shortlist_matches_and_gaps(client, seed) -> None:
+    response = client.get("/digest", params={"top_roles": 1, "top_gaps": 1})
+    assert response.status_code == 200
+    body = response.json()
+
+    assert body["schema_version"] == "1.0"
+    assert body["kind"] == "daily_digest"
+    assert body["shortlist_run_id"] == LATEST_RUN
+    assert body["counts"]["shortlisted"] == 2
+    assert body["counts"]["roles_returned"] == 1
+    assert body["counts"]["matched"] == 1
+    assert body["counts"]["unmatched"] == 1
+    assert body["roles"][0]["posting_id"] == seed.with_jd_id
+    assert body["roles"][0]["verdict"] == "plausible"
+    assert body["roles"][0]["evidenced_count"] == 1
+    assert body["roles"][0]["absent_count"] == 1
+    assert body["gaps"][0]["skill"] == "Kubernetes"
+    assert body["next_actions"]
+
+
+def test_digest_rejects_zero_limits(client, seed) -> None:
+    assert client.get("/digest", params={"top_roles": 0}).status_code == 422
+    assert client.get("/digest", params={"top_gaps": 0}).status_code == 422
+
+
+# --------------------------------------------------------------------------------------
 # skills
 # --------------------------------------------------------------------------------------
 
@@ -246,10 +325,15 @@ def test_ops_queue_degrades_gracefully_when_redis_is_unreachable(client, monkeyp
     assert client.get("/health").status_code == 200
 
 
-def test_the_whole_api_is_read_only(client) -> None:
-    """No route accepts a write verb. That is the property that makes no-auth safe."""
+def test_only_stateless_resume_tailoring_accepts_a_post(client) -> None:
+    """The extension's compute-only route is the sole non-read verb."""
     from jme.api.app import app as real_app
 
+    non_read_routes = {}
     for route in real_app.routes:
         methods = getattr(route, "methods", set()) or set()
-        assert not (methods & {"POST", "PUT", "PATCH", "DELETE"}), route.path
+        non_read = methods & {"POST", "PUT", "PATCH", "DELETE"}
+        if non_read:
+            non_read_routes[route.path] = non_read
+    assert non_read_routes == {"/resume/tailor": {"POST"}}
+    assert client.get("/resume/tailor").status_code == 405

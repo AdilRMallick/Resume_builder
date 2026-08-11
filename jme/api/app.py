@@ -1,4 +1,4 @@
-"""Read-only HTTP API over Postgres.
+"""Read-mostly HTTP API over Postgres plus stateless local resume tailoring.
 
 Read-only is a design decision, not a limitation. Every write in this system happens in
 a worker with a transaction and idempotency rules around it; exposing writes over HTTP
@@ -6,9 +6,10 @@ would mean re-implementing those rules in a second place. So this app opens a se
 selects, and closes.
 
 No auth, no tenancy, no rate limiting: ARCHITECTURE section 10 puts multi-user and
-hosting explicitly out of scope. This binds to localhost and serves one person. If that
-ever changes, this file is the wrong place to bolt auth onto - put a reverse proxy in
-front of it.
+hosting explicitly out of scope. This binds to localhost and serves one person. The
+resume-tailoring POST is compute-only: it persists neither the submitted job description
+nor its output. If this service ever leaves localhost, put authentication at a reverse
+proxy rather than bolting it onto this module.
 
 Session handling: one session per request via the `get_session` dependency. Tests
 override that dependency with the transactional `db_session` fixture, which is why it is
@@ -18,6 +19,7 @@ a plain function and not a module-level global.
 from __future__ import annotations
 
 import datetime as dt
+import json
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Annotated, Any
@@ -29,6 +31,7 @@ from sqlalchemy.orm import Session
 
 from jme.api.schemas import (
     CitationOut,
+    DigestOut,
     GapReportOut,
     Health,
     JDOut,
@@ -39,10 +42,13 @@ from jme.api.schemas import (
     PostingSummary,
     QueueStatus,
     RequirementOut,
+    ResumeProfileOut,
     ShortlistItem,
     ShortlistOut,
     SkillOut,
     StreamStatus,
+    TailoredResumeOut,
+    TailorResumeRequest,
 )
 from jme.config import (
     GROUP_ENRICH,
@@ -55,8 +61,10 @@ from jme.config import (
 )
 from jme.db import session_scope
 from jme.logging import get_logger
+from jme.report.digest import build_digest_report, digest_report_to_dict
 from jme.report.gap import build_gap_report
 from jme.report.render import gap_report_to_dict
+from jme.resume.tailor import load_profile, tailor_profile
 
 log = get_logger(__name__)
 
@@ -71,6 +79,7 @@ SessionDep = Annotated[Session, Depends(get_session)]
 
 #: The dashboard. A single file with no build step, served as-is.
 DASHBOARD = Path(__file__).with_name("static") / "index.html"
+RESUME_PROFILE = Path(__file__).parent.parent / "resume" / "profile.json"
 
 
 def create_app() -> FastAPI:
@@ -101,6 +110,33 @@ def create_app() -> FastAPI:
             raise HTTPException(
                 status_code=500, detail=f"dashboard asset missing at {DASHBOARD}"
             ) from exc
+
+    @app.get("/resume/profile", response_model=ResumeProfileOut)
+    def resume_profile() -> ResumeProfileOut:
+        """Verified bullet bank for deterministic, browser-side resume tailoring."""
+        try:
+            payload = json.loads(RESUME_PROFILE.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            log.error("resume_profile_unavailable", path=str(RESUME_PROFILE), error=str(exc))
+            raise HTTPException(status_code=500, detail="resume profile is unavailable") from exc
+        return ResumeProfileOut.model_validate(payload)
+
+    @app.post("/resume/tailor", response_model=TailoredResumeOut)
+    def tailor_resume(request: TailorResumeRequest) -> TailoredResumeOut:
+        """Compute a tailored view without persisting the job description or output."""
+        try:
+            profile = load_profile(RESUME_PROFILE)
+        except (OSError, json.JSONDecodeError) as exc:
+            log.error("resume_profile_unavailable", path=str(RESUME_PROFILE), error=str(exc))
+            raise HTTPException(status_code=500, detail="resume profile is unavailable") from exc
+        result = tailor_profile(
+            profile,
+            job_description=request.job_description,
+            title=request.title,
+            company=request.company,
+            url=request.url,
+        )
+        return TailoredResumeOut.model_validate(result)
 
     # ----------------------------------------------------------------------------------
     # health
@@ -363,6 +399,27 @@ def create_app() -> FastAPI:
         return GapReportOut(
             **gap_report_to_dict(report, top=top, include_covered=include_covered)
         )
+
+    @app.get("/digest", response_model=DigestOut)
+    def digest(
+        session: SessionDep,
+        run_id: Annotated[
+            str | None, Query(description="omit for the most recent shortlist run")
+        ] = None,
+        top_roles: Annotated[int, Query(ge=1, le=100)] = 10,
+        top_gaps: Annotated[int, Query(ge=1, le=100)] = 10,
+        all_active: Annotated[
+            bool, Query(description="ignore the config eligibility filters")
+        ] = False,
+    ) -> DigestOut:
+        report = build_digest_report(
+            session,
+            run_id=run_id,
+            top_roles=top_roles,
+            top_gaps=top_gaps,
+            apply_eligibility=not all_active,
+        )
+        return DigestOut(**digest_report_to_dict(report))
 
     # ----------------------------------------------------------------------------------
     # skills

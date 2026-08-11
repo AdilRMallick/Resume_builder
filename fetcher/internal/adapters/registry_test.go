@@ -24,9 +24,10 @@ func TestRegistryDispatchAndFallback(t *testing.T) {
 		{"lever", "https://jobs.lever.co/northwind/" + leverUUID, "lever"},
 		{"lever eu", "https://jobs.eu.lever.co/northwind/" + leverUUID, "lever"},
 		{"ashby", "https://jobs.ashbyhq.com/halcyon/" + ashbyListedID, "ashby"},
+		{"smartrecruiters", "https://jobs.smartrecruiters.com/Acme/744000123456789-software-engineer", "smartrecruiters"},
 		// Everything unrecognised must land on the fallback rather than error.
 		{"company career page", "https://careers.vectorfreight.com/jobs/junior-platform-engineer", "fallback"},
-		{"smartrecruiters", "https://jobs.smartrecruiters.com/Acme/743999", "fallback"},
+		{"smartrecruiters careers page", "https://careers.smartrecruiters.com/Acme", "fallback"},
 		{"workday", "https://acme.wd1.myworkdayjobs.com/en-US/careers/job/Detroit/SWE_R-1", "fallback"},
 		{"lookalike host", "https://notgreenhouse.io/acme/jobs/1", "fallback"},
 	}
@@ -117,7 +118,7 @@ func TestRegistryFetchRoutesToAdapter(t *testing.T) {
 
 func TestRegistryNamesCoversEveryAdapter(t *testing.T) {
 	got := NewRegistry().Names()
-	want := []string{"greenhouse", "lever", "ashby", "fallback"}
+	want := []string{"greenhouse", "lever", "ashby", "smartrecruiters", "fallback"}
 	if len(got) != len(want) {
 		t.Fatalf("Names() = %v, want %v", got, want)
 	}

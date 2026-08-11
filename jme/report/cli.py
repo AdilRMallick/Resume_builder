@@ -2,13 +2,21 @@
 
 from __future__ import annotations
 
-from typing import Annotated
+import json
+from typing import Annotated, cast
 
 import typer
 from rich.console import Console
 from sqlalchemy import text
 
 from jme.db import session_scope
+from jme.report.digest import (
+    DigestFormat,
+    build_digest_report,
+    digest_report_to_dict,
+    render_digest_markdown,
+    write_digest,
+)
 from jme.report.gap import build_gap_report, coverage_report, explain_gap_query
 from jme.report.render import (
     metrics_table,
@@ -21,6 +29,46 @@ from jme.report.trend import build_trend_report
 
 app = typer.Typer(help="Aggregate skill gap report", no_args_is_help=True)
 console = Console()
+
+
+@app.command()
+def digest(
+    run_id: Annotated[
+        str | None, typer.Option("--run-id", help="shortlist run; defaults to the latest")
+    ] = None,
+    top_roles: Annotated[int, typer.Option("--roles", min=1, help="roles to include")] = 10,
+    top_gaps: Annotated[int, typer.Option("--gaps", min=1, help="skill gaps to include")] = 10,
+    format: Annotated[
+        str, typer.Option("--format", "-f", help="markdown or json")
+    ] = "markdown",
+    output: Annotated[
+        str | None, typer.Option("--output", "-o", help="write to a file instead of stdout")
+    ] = None,
+    all_active: Annotated[bool, typer.Option("--all-active")] = False,
+) -> None:
+    """Daily shortlist, grounded matches, current gaps, and next actions."""
+    output_format = format.lower()
+    if output_format not in {"markdown", "json"}:
+        console.print("[red]--format must be markdown or json[/red]")
+        raise typer.Exit(2)
+    with session_scope() as session:
+        report = build_digest_report(
+            session,
+            run_id=run_id,
+            top_roles=top_roles,
+            top_gaps=top_gaps,
+            apply_eligibility=not all_active,
+        )
+    if output:
+        written = write_digest(report, output, format=cast(DigestFormat, output_format))
+        console.print(f"[dim]wrote {written}[/dim]")
+        return
+    content = (
+        render_digest_markdown(report)
+        if output_format == "markdown"
+        else json.dumps(digest_report_to_dict(report), indent=2)
+    )
+    console.print(content, markup=False, highlight=False)
 
 
 @app.command()

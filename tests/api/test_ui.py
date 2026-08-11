@@ -20,6 +20,10 @@ from jme.api.schemas import (
     Health,
     PostingSummary,
     QueueStatus,
+    ResumeBulletOut,
+    ResumeContactOut,
+    ResumeEntryOut,
+    ResumeProfileOut,
     ShortlistItem,
     ShortlistOut,
     StreamStatus,
@@ -55,7 +59,7 @@ def test_every_path_the_page_fetches_exists_on_the_app() -> None:
     }
     # A regex that silently matches nothing would make this test vacuous, and an
     # under-matching one would make it weaker than it looks. Pin the expected set.
-    assert fetched == {"/health", "/gaps", "/shortlist", "/ops/queue"}, (
+    assert fetched == {"/health", "/gaps", "/shortlist", "/ops/queue", "/resume/profile"}, (
         f"unexpected set of fetched paths: {sorted(fetched)}"
     )
 
@@ -79,6 +83,10 @@ DASHBOARD_FIELDS = {
     ShortlistOut: ["run_id", "count", "items"],
     ShortlistItem: ["rank", "coarse_score", "posting"],
     PostingSummary: ["company", "title", "url", "locations", "is_remote", "has_jd", "jd_adapter"],
+    ResumeProfileOut: ["name", "headline", "contact", "education", "experience", "projects", "leadership", "skills", "certifications"],
+    ResumeContactOut: ["label", "value", "url"],
+    ResumeEntryOut: ["organization", "location", "title", "dates", "url", "bullets"],
+    ResumeBulletOut: ["text", "tags"],
     QueueStatus: ["streams"],
     StreamStatus: [
         "stream", "group", "depth", "pending", "consumers", "oldest_pending_age_sec",
@@ -109,6 +117,15 @@ def test_dashboard_references_nothing_off_origin() -> None:
     # come from the data, not from the page. What matters is that no *asset* is remote.
     assert "<script src" not in html
     assert "@import" not in html
+
+
+def test_resume_studio_fetches_posting_detail_for_the_selected_role() -> None:
+    html = DASHBOARD.read_text(encoding="utf-8")
+    assert "fetch(`/postings/${postingId}`" in html
+    routes = {route.path for route in create_app().routes}
+    assert "/postings/{posting_id}" in routes
+    assert "/resume/tailor" in routes
+    assert 'fetch("/resume/tailor"' in html
 
 
 def test_dashboard_reports_a_missing_asset_instead_of_a_blank_500(client, monkeypatch) -> None:

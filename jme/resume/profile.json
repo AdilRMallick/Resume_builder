@@ -1,0 +1,242 @@
+{
+  "name": "Adil R. Mallick",
+  "headline": "Computer Science student building reliable cloud, data, and full-stack systems",
+  "contact": [
+    {"label": "U.S. Citizen", "value": "U.S. Citizen", "url": null},
+    {"label": "Email", "value": "mallick9@msu.edu", "url": "mailto:mallick9@msu.edu"},
+    {"label": "Portfolio", "value": "adilrmallick.com", "url": "https://www.adilrmallick.com/"},
+    {"label": "LinkedIn", "value": "LinkedIn", "url": "https://www.linkedin.com/in/adil-mallick-5332662a7"},
+    {"label": "GitHub", "value": "GitHub", "url": "https://github.com/AdilRMallick"}
+  ],
+  "education": [
+    {
+      "organization": "Michigan State University, College of Engineering",
+      "location": "East Lansing, MI",
+      "title": "Bachelor of Science in Computer Science, Minor in Business",
+      "dates": "Expected May 2027",
+      "bullets": [
+        {
+          "text": "Coursework: Data Structures and Algorithms, Operating Systems, Computer Architecture, Database Systems, Artificial Intelligence and Machine Learning",
+          "tags": ["algorithms", "operating systems", "computer architecture", "databases", "artificial intelligence", "machine learning"]
+        }
+      ]
+    }
+  ],
+  "experience": [
+    {
+      "organization": "HERE Technologies",
+      "location": "Chicago, IL",
+      "title": "Software Engineer Intern, ML Operations",
+      "dates": "Jun. 2026 - Aug. 2026",
+      "bullets": [
+        {
+          "text": "Architected a containerized FastAPI inference service with Python and Docker, decoupling GPU-based satellite imagery segmentation from a Kubernetes-orchestrated ML pipeline and reducing model validation cycles from hours to minutes.",
+          "tags": ["python", "fastapi", "docker", "kubernetes", "gpu", "machine learning", "ml", "computer vision", "api"]
+        },
+        {
+          "text": "Deployed GPU-backed inference on AWS EC2 and abstracted AWS SQS, SNS, and database dependencies behind a stateless HTTP interface.",
+          "tags": ["aws", "ec2", "sqs", "sns", "http", "rest", "api", "cloud", "distributed systems"]
+        },
+        {
+          "text": "Drove migration of pipeline object storage from HERE's Open Location Platform to Amazon S3 across 20 deployment environments with no production downtime.",
+          "tags": ["aws", "s3", "cloud", "migration", "reliability", "devops", "deployment"]
+        }
+      ]
+    },
+    {
+      "organization": "DTE Energy",
+      "location": "Detroit, MI",
+      "title": "Cloud and Infrastructure Co-op",
+      "dates": "Sep. 2025 - Jun. 2026",
+      "bullets": [
+        {
+          "text": "Provisioned Azure Cosmos DB, Key Vault, Azure Monitor, and alerting infrastructure with Terraform across enterprise environments.",
+          "tags": ["azure", "terraform", "cosmos db", "key vault", "monitoring", "infrastructure as code", "cloud", "devops"]
+        },
+        {
+          "text": "Developed a Python REST API with Application Insights, managed identity authentication, Cosmos DB, and Key Vault.",
+          "tags": ["python", "rest", "api", "azure", "cosmos db", "key vault", "authentication", "monitoring", "nosql"]
+        },
+        {
+          "text": "Co-developed certificate automation that tracked SSL renewal status and alerted on expiring certificates across multi-environment CI/CD deployments.",
+          "tags": ["ssl", "security", "automation", "ci/cd", "devops", "monitoring", "certificates"]
+        }
+      ]
+    },
+    {
+      "organization": "DTE Energy",
+      "location": "Detroit, MI",
+      "title": "Cloud and Infrastructure Intern",
+      "dates": "May 2025 - Aug. 2025",
+      "bullets": [
+        {
+          "text": "Shipped a Microsoft Teams chatbot for more than 500 enterprise users as a TypeScript Azure Function with Power Automate, ServiceNow REST APIs, and Azure API Management.",
+          "tags": ["typescript", "azure", "functions", "rest", "api", "chatbot", "servicenow", "cloud"]
+        },
+        {
+          "text": "Debugged REST routing and validated JSON payloads with Postman, cutting chatbot query response time by 27 percent.",
+          "tags": ["rest", "api", "json", "postman", "debugging", "performance", "typescript"]
+        }
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "organization": "Half-Full",
+      "location": "",
+      "title": "React, Next.js, TypeScript, Electron, Python",
+      "dates": "2024 - 2025",
+      "url": "https://www.halffull.pro/",
+      "bullets": [
+        {
+          "text": "Built cross-platform task-management features for a desktop productivity app published on the Mac App Store and Microsoft Store, offloading main-process work through Electron IPC to cut measured idle RAM use by 35 percent.",
+          "tags": ["react", "next.js", "typescript", "electron", "desktop", "performance", "ipc"]
+        },
+        {
+          "text": "Automated email-list data workflows with Python, smtplib, and pandas.",
+          "tags": ["python", "pandas", "automation", "data"]
+        }
+      ]
+    },
+    {
+      "organization": "EV Grid Platform",
+      "location": "",
+      "title": "Java, Kotlin, Spring Boot, PostgreSQL, Docker, Testcontainers",
+      "dates": "2026",
+      "url": "https://github.com/AdilRMallick/ev-grid-platform",
+      "bullets": [
+        {
+          "text": "Cut data-quality report latency from 2.1 seconds to 95 milliseconds at 100,000 rows by replacing in-memory aggregation with indexed PostgreSQL GROUP BY queries, verified against a Testcontainers PostgreSQL instance.",
+          "tags": ["java", "kotlin", "spring boot", "postgresql", "sql", "performance", "testcontainers", "databases"]
+        },
+        {
+          "text": "Built a Kotlin provider simulator serving Tesla-, Ford-, and SmartCar-shaped APIs with divergent JSON schemas, authentication styles, error envelopes, and runtime fault injection.",
+          "tags": ["kotlin", "api", "json", "authentication", "testing", "fault injection", "distributed systems"]
+        }
+      ]
+    },
+    {
+      "organization": "Job Match Engine",
+      "location": "",
+      "title": "Python, Go, PostgreSQL, pgvector, Redis Streams, FastAPI",
+      "dates": "2026",
+      "url": "https://github.com/AdilRMallick/Resume_builder",
+      "bullets": [
+        {
+          "text": "Built a local-first pipeline that ingests job feeds, resolves descriptions, extracts structured requirements, retrieves resume evidence, produces cited matches, and reports aggregate skill gaps.",
+          "tags": ["python", "go", "fastapi", "postgresql", "redis", "api", "data pipeline", "machine learning"]
+        },
+        {
+          "text": "Implemented reliable fetching with Redis consumer groups, stale-message recovery, per-host rate limits, retries, circuit breakers, dead-letter handling, and dedicated public JSON adapters for four applicant-tracking systems.",
+          "tags": ["go", "redis", "distributed systems", "reliability", "api", "concurrency", "backend"]
+        },
+        {
+          "text": "Added versioned evidence retrieval with pgvector embeddings, mandatory citations, deterministic ranking, gap reports, a daily digest, and Python and Go CI checks.",
+          "tags": ["python", "postgresql", "pgvector", "embeddings", "ci/cd", "testing", "machine learning"]
+        }
+      ]
+    },
+    {
+      "organization": "ETL and ML Pipeline",
+      "location": "",
+      "title": "Python, TensorFlow, Docker, pytest",
+      "dates": "2026",
+      "url": "https://github.com/AdilRMallick/etl-ml-pipeline",
+      "bullets": [
+        {
+          "text": "Built a Python pipeline that ingests JSON and JSONL data, validates records with explicit rejection reasons, transforms features, trains a model, and emits reports.",
+          "tags": ["python", "etl", "data pipeline", "json", "machine learning", "tensorflow"]
+        },
+        {
+          "text": "Added reproducible preprocessing, pytest coverage, Docker execution, and GitHub Actions checks across Python versions with an end-to-end smoke test.",
+          "tags": ["python", "testing", "pytest", "docker", "ci/cd", "github actions", "machine learning"]
+        }
+      ]
+    },
+    {
+      "organization": "Geospatial API Platform",
+      "location": "",
+      "title": "Python, Express, MongoDB, React, Docker",
+      "dates": "2026",
+      "url": "https://github.com/AdilRMallick/geo-api-platform",
+      "bullets": [
+        {
+          "text": "Built a geospatial data path from Python ingestion through an Express REST API and MongoDB GeoJSON indexes to a React dashboard.",
+          "tags": ["python", "node.js", "express", "mongodb", "react", "rest", "api", "geospatial"]
+        },
+        {
+          "text": "Implemented geospatial-near search, filtering, pagination, statistics, CRUD operations, structured logging, centralized errors, and input validation.",
+          "tags": ["mongodb", "api", "rest", "search", "logging", "validation", "backend"]
+        }
+      ]
+    },
+    {
+      "organization": "Privacy-Preserving Measurement",
+      "location": "",
+      "title": "Python, Federated Learning, Differential Privacy",
+      "dates": "2026",
+      "url": "https://github.com/AdilRMallick/Privacy-Preserving-Measurement",
+      "bullets": [
+        {
+          "text": "Implemented differentially private federated averaging on MNIST with simulated clients, clipped model updates, Gaussian noise, and decentralized raw client data.",
+          "tags": ["python", "machine learning", "federated learning", "differential privacy", "security", "privacy"]
+        },
+        {
+          "text": "Added a Renyi differential privacy accountant and experiment sweeps to measure privacy-utility tradeoffs across noise settings.",
+          "tags": ["python", "machine learning", "differential privacy", "experimentation", "statistics"]
+        }
+      ]
+    },
+    {
+      "organization": "Secure API Privacy Dashboard",
+      "location": "",
+      "title": "React, Node.js, Express, MongoDB, JWT",
+      "dates": "2026",
+      "url": "https://github.com/AdilRMallick/secure-api-privacy",
+      "bullets": [
+        {
+          "text": "Built a React and Express application for cataloging API endpoints and assessing privacy risk across six dimensions with findings, remediation tracking, charts, reports, and CSV export.",
+          "tags": ["react", "node.js", "express", "api", "privacy", "security", "data visualization"]
+        },
+        {
+          "text": "Implemented MongoDB persistence, JWT sessions, bcrypt password hashing, and role-based access for administrator, reviewer, and viewer roles.",
+          "tags": ["mongodb", "jwt", "bcrypt", "authentication", "authorization", "security", "rbac"]
+        }
+      ]
+    },
+    {
+      "organization": "Prismatic Ray Tracer",
+      "location": "",
+      "title": "C++, Object-Oriented Design, OpenGL",
+      "dates": "2025",
+      "url": "https://github.com/AdilRMallick/prismatic-raytracer",
+      "bullets": [
+        {
+          "text": "Built a recursive raytracer in C++ using object-oriented design, implementing reflection, refraction, Phong shading, hard shadows, textures, and an OpenGL preview.",
+          "tags": ["c++", "object-oriented design", "opengl", "graphics", "algorithms"]
+        }
+      ]
+    }
+  ],
+  "leadership": [
+    {
+      "organization": "Spartan Food Security Council",
+      "location": "East Lansing, MI",
+      "title": "Vice President",
+      "dates": "2024 - 2025",
+      "bullets": [
+        {
+          "text": "Built the volunteer recruitment pipeline and coordinated logistics for a public food bank in the Michigan State University Union for a council that secured more than $1 million in Michigan MiLeap grant funding.",
+          "tags": ["leadership", "communication", "operations", "project management"]
+        }
+      ]
+    }
+  ],
+  "skills": {
+    "Languages": ["Python", "Java", "Kotlin", "C++", "Go", "JavaScript", "TypeScript", "SQL", "HTML/CSS"],
+    "Frameworks": ["FastAPI", "Spring Boot", "Flask", "React", "Next.js", "Node.js", "Express", "Electron", "PyTorch", "TensorFlow"],
+    "Cloud and DevOps": ["AWS", "Azure", "Terraform", "Docker", "Kubernetes", "Git", "GitHub Actions", "CI/CD", "Linux"],
+    "Data and Testing": ["PostgreSQL", "MongoDB", "Cosmos DB", "Redis", "Flyway", "ETL Pipelines", "REST APIs", "Postman", "Splunk", "pytest", "JUnit", "Testcontainers"]
+  },
+  "certifications": ["CompTIA A+", "Cisco IT Essentials"]
+}
