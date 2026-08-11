@@ -92,6 +92,8 @@ def test_resume_provider_status_never_exposes_keys(client, monkeypatch) -> None:
         "verified",
         "openai",
         "anthropic",
+        "gemini",
+        "kimi",
     }
     assert next(item for item in body["providers"] if item["id"] == "openai")[
         "available"
@@ -99,7 +101,10 @@ def test_resume_provider_status_never_exposes_keys(client, monkeypatch) -> None:
     assert "do-not-return-me" not in response.text
 
 
-def test_resume_ai_failure_falls_back_to_verified_output(client, monkeypatch) -> None:
+@pytest.mark.parametrize("mode", ["openai", "anthropic", "gemini", "kimi"])
+def test_resume_ai_failure_falls_back_to_verified_output(
+    client, monkeypatch, mode
+) -> None:
     from jme.resume.ai import AIRewriteError
 
     def fail(*args, **kwargs):
@@ -109,14 +114,14 @@ def test_resume_ai_failure_falls_back_to_verified_output(client, monkeypatch) ->
     response = client.post(
         "/resume/tailor",
         json={
-            "customization_mode": "openai",
+            "customization_mode": mode,
             "title": "Cloud Engineer",
             "job_description": "Python AWS Docker Kubernetes Terraform " * 10,
         },
     )
     assert response.status_code == 200
     customization = response.json()["customization"]
-    assert customization["requested_mode"] == "openai"
+    assert customization["requested_mode"] == mode
     assert customization["applied_mode"] == "verified"
     assert "used verified-only" in customization["warning"]
 

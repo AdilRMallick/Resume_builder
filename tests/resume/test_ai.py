@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 
 from jme.config import Settings
-from jme.resume.ai import customize_with_ai, provider_catalog
+from jme.resume.ai import _gemini_call, _kimi_call, customize_with_ai, provider_catalog
 from jme.resume.tailor import load_profile, tailor_profile
 
 
@@ -102,10 +102,93 @@ def test_ai_rejects_new_metrics_unverified_keywords_and_target_leaks() -> None:
 
 def test_provider_catalog_reports_readiness_without_returning_secrets() -> None:
     providers = provider_catalog(
-        Settings(OPENAI_API_KEY="openai-secret", ANTHROPIC_API_KEY=None)
+        Settings(
+            OPENAI_API_KEY="openai-secret",
+            ANTHROPIC_API_KEY=None,
+            GEMINI_API_KEY="gemini-secret",
+            MOONSHOT_API_KEY="kimi-secret",
+        )
     )
     by_id = {provider["id"]: provider for provider in providers}
     assert by_id["verified"]["available"] is True
     assert by_id["openai"]["available"] is True
     assert by_id["anthropic"]["available"] is False
+    assert by_id["gemini"]["available"] is True
+    assert by_id["kimi"]["available"] is True
     assert "openai-secret" not in json.dumps(providers)
+    assert "gemini-secret" not in json.dumps(providers)
+    assert "kimi-secret" not in json.dumps(providers)
+
+
+class _FakeResponse:
+    def __init__(self, payload: dict) -> None:
+        self._payload = payload
+
+    def raise_for_status(self) -> None:
+        return None
+
+    def json(self) -> dict:
+        return self._payload
+
+
+def test_gemini_uses_backend_key_and_json_schema(monkeypatch) -> None:
+    captured = {}
+
+    def fake_post(url, *, headers, json, timeout):
+        captured.update(url=url, headers=headers, body=json, timeout=timeout)
+        return _FakeResponse(
+            {
+                "candidates": [
+                    {
+                        "finishReason": "STOP",
+                        "content": {"parts": [{"text": '{"rewrites": []}'}]},
+                    }
+                ]
+            }
+        )
+
+    monkeypatch.setattr("jme.resume.ai.httpx.post", fake_post)
+    payload, model = _gemini_call(
+        "system",
+        "user",
+        {"type": "object"},
+        Settings(GEMINI_API_KEY="gemini-secret"),
+    )
+    assert payload == {"rewrites": []}
+    assert model == "gemini-3.6-flash"
+    assert captured["headers"]["x-goog-api-key"] == "gemini-secret"
+    assert captured["body"]["generationConfig"]["responseMimeType"] == "application/json"
+    assert captured["body"]["generationConfig"]["responseJsonSchema"] == {
+        "type": "object"
+    }
+
+
+def test_kimi_uses_moonshot_backend_key_and_structured_output(monkeypatch) -> None:
+    captured = {}
+
+    def fake_post(url, *, headers, json, timeout):
+        captured.update(url=url, headers=headers, body=json, timeout=timeout)
+        return _FakeResponse(
+            {
+                "choices": [
+                    {
+                        "finish_reason": "stop",
+                        "message": {"content": '{"rewrites": []}'},
+                    }
+                ]
+            }
+        )
+
+    monkeypatch.setattr("jme.resume.ai.httpx.post", fake_post)
+    payload, model = _kimi_call(
+        "system",
+        "user",
+        {"type": "object"},
+        Settings(MOONSHOT_API_KEY="kimi-secret"),
+    )
+    assert payload == {"rewrites": []}
+    assert model == "kimi-k2.6"
+    assert captured["url"] == "https://api.moonshot.ai/v1/chat/completions"
+    assert captured["headers"]["authorization"] == "Bearer kimi-secret"
+    assert captured["body"]["response_format"]["type"] == "json_schema"
+    assert captured["body"]["thinking"] == {"type": "disabled"}

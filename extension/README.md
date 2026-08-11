@@ -5,7 +5,7 @@ the visible description from the active tab or accept pasted/uploaded text, then
 that text to the local Job Match Engine at `127.0.0.1:8002`.
 
 The engine always starts by selecting and reordering bullets from
-`jme/resume/profile.json`. Verified mode stops there. OpenAI and Claude modes ask the
+`jme/resume/profile.json`. Verified mode stops there. OpenAI, Claude, Gemini, and Kimi modes ask the
 local backend for evidence-linked rewrites, validate them, and fall back to verified
 mode on provider or validation failure. The extension never stores or receives API keys.
 
@@ -17,9 +17,9 @@ mode on provider or validation failure. The extension never stores or receives A
 4. Choose **Load unpacked** and select this `extension` directory.
 5. Pin **JME Resume Tailor**, open a job page, and click the extension icon.
 
-To enable an AI option, add `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` to the repository's
-`.env` file before starting the application. Without either key, **Verified selection**
-remains fully usable.
+To enable an AI option, add `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, or
+`MOONSHOT_API_KEY` (Kimi) to the repository's `.env` file before starting the
+application. Without a key, **Verified selection** remains fully usable.
 
 Use **Use current job page** for a normal listing, or paste/upload a `.txt`, `.md`, or
 `.html` job description. The result is editable in the panel and can be copied,

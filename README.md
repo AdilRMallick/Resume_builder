@@ -130,7 +130,7 @@ at `GET /digest`.
 is open, click **Use current job page** to capture its visible description, or paste or
 upload a text/Markdown/HTML description. The local API always selects relevant verified
 bullets from `jme/resume/profile.json`. You can keep that deterministic wording or ask
-OpenAI/Claude to propose evidence-linked rewrites; numeric, keyword, source, and target-
+OpenAI, Claude, Gemini, or Kimi to propose evidence-linked rewrites; numeric, keyword, source, and target-
 banner checks run before any rewrite is accepted. The result remains an editable Jake-
 template resume with copy, LaTeX download, and browser print-to-PDF.
 
@@ -140,7 +140,15 @@ AI is optional. Put one provider key in `.env` and restart the API:
 OPENAI_API_KEY=your-key
 # or
 ANTHROPIC_API_KEY=your-key
+# or
+GEMINI_API_KEY=your-key
+# or (Kimi)
+MOONSHOT_API_KEY=your-key
 ```
+
+Gemini offers a limited free API tier. Google states that free-tier content may be used
+to improve its products; use a paid tier if that tradeoff is not acceptable for resume
+data. Kimi API usage is billed separately by Moonshot.
 
 ```bash
 jme serve start --port 8002

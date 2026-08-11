@@ -12,13 +12,14 @@ import json
 import re
 from collections.abc import Callable, Iterator
 from typing import Any, Literal
+from urllib.parse import quote
 
 import httpx
 
 from jme.config import Settings, get_settings
 from jme.resume.latex import render_jake_latex
 
-Provider = Literal["openai", "anthropic"]
+Provider = Literal["openai", "anthropic", "gemini", "kimi"]
 ProviderCall = Callable[[Provider, str, str, dict[str, Any], Settings], tuple[dict[str, Any], str]]
 
 SECTIONS = ("education", "experience", "projects", "leadership")
@@ -73,6 +74,18 @@ def provider_catalog(settings: Settings | None = None) -> list[dict[str, Any]]:
             "label": "AI rewrite · Claude",
             "available": bool(cfg.anthropic_api_key),
             "model": cfg.resume_anthropic_model,
+        },
+        {
+            "id": "gemini",
+            "label": "AI rewrite · Gemini (free tier available)",
+            "available": bool(cfg.gemini_api_key),
+            "model": cfg.resume_gemini_model,
+        },
+        {
+            "id": "kimi",
+            "label": "AI rewrite · Kimi",
+            "available": bool(cfg.kimi_api_key),
+            "model": cfg.resume_kimi_model,
         },
     ]
 
@@ -223,6 +236,109 @@ def _anthropic_call(
         raise AIRewriteError("Claude returned invalid structured JSON") from exc
 
 
+def _gemini_call(
+    system: str, user: str, schema: dict[str, Any], settings: Settings
+) -> tuple[dict[str, Any], str]:
+    if not settings.gemini_api_key:
+        raise AIRewriteError("GEMINI_API_KEY is not configured")
+    model = quote(settings.resume_gemini_model, safe="")
+    body = {
+        "system_instruction": {"parts": [{"text": system}]},
+        "contents": [{"role": "user", "parts": [{"text": user}]}],
+        "generationConfig": {
+            "responseMimeType": "application/json",
+            "responseJsonSchema": schema,
+            "maxOutputTokens": 6000,
+        },
+    }
+    try:
+        response = httpx.post(
+            f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
+            headers={
+                "x-goog-api-key": settings.gemini_api_key,
+                "content-type": "application/json",
+            },
+            json=body,
+            timeout=settings.resume_ai_timeout_sec,
+        )
+        response.raise_for_status()
+        payload = response.json()
+    except (httpx.HTTPError, ValueError) as exc:
+        raise AIRewriteError(f"Gemini request failed: {exc}") from exc
+
+    candidate = next(iter(payload.get("candidates", [])), None)
+    if not isinstance(candidate, dict):
+        raise AIRewriteError("Gemini returned no candidate")
+    finish_reason = candidate.get("finishReason")
+    if finish_reason not in (None, "STOP"):
+        raise AIRewriteError(f"Gemini stopped with {finish_reason}")
+    text = next(
+        (
+            part.get("text")
+            for part in candidate.get("content", {}).get("parts", [])
+            if isinstance(part.get("text"), str)
+        ),
+        None,
+    )
+    if not isinstance(text, str):
+        raise AIRewriteError("Gemini returned no structured text output")
+    try:
+        return json.loads(text), settings.resume_gemini_model
+    except json.JSONDecodeError as exc:
+        raise AIRewriteError("Gemini returned invalid structured JSON") from exc
+
+
+def _kimi_call(
+    system: str, user: str, schema: dict[str, Any], settings: Settings
+) -> tuple[dict[str, Any], str]:
+    if not settings.kimi_api_key:
+        raise AIRewriteError("MOONSHOT_API_KEY is not configured")
+    body = {
+        "model": settings.resume_kimi_model,
+        "messages": [
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ],
+        "response_format": {
+            "type": "json_schema",
+            "json_schema": {
+                "name": "resume_rewrites",
+                "schema": schema,
+                "strict": True,
+            },
+        },
+        "thinking": {"type": "disabled"},
+        "max_completion_tokens": 6000,
+    }
+    try:
+        response = httpx.post(
+            "https://api.moonshot.ai/v1/chat/completions",
+            headers={
+                "authorization": f"Bearer {settings.kimi_api_key}",
+                "content-type": "application/json",
+            },
+            json=body,
+            timeout=settings.resume_ai_timeout_sec,
+        )
+        response.raise_for_status()
+        payload = response.json()
+    except (httpx.HTTPError, ValueError) as exc:
+        raise AIRewriteError(f"Kimi request failed: {exc}") from exc
+
+    choice = next(iter(payload.get("choices", [])), None)
+    if not isinstance(choice, dict):
+        raise AIRewriteError("Kimi returned no completion choice")
+    if choice.get("finish_reason") == "length":
+        raise AIRewriteError("Kimi response was truncated")
+    text = choice.get("message", {}).get("content")
+    if not isinstance(text, str):
+        raise AIRewriteError("Kimi returned no structured text output")
+    try:
+        return json.loads(text), settings.resume_kimi_model
+    except json.JSONDecodeError as exc:
+        raise AIRewriteError("Kimi returned invalid structured JSON") from exc
+
+
 def _call_provider(
     provider: Provider,
     system: str,
@@ -232,7 +348,11 @@ def _call_provider(
 ) -> tuple[dict[str, Any], str]:
     if provider == "openai":
         return _openai_call(system, user, schema, settings)
-    return _anthropic_call(system, user, schema, settings)
+    if provider == "anthropic":
+        return _anthropic_call(system, user, schema, settings)
+    if provider == "gemini":
+        return _gemini_call(system, user, schema, settings)
+    return _kimi_call(system, user, schema, settings)
 
 
 def customize_with_ai(

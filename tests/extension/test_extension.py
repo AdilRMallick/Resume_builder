@@ -60,4 +60,6 @@ def test_ai_provider_selection_keeps_secrets_in_the_local_backend() -> None:
     assert 'value="verified"' in html
     assert 'value="openai"' in html
     assert 'value="anthropic"' in html
-    assert '"version": "0.1.2"' in manifest
+    assert 'value="gemini"' in html
+    assert 'value="kimi"' in html
+    assert '"version": "0.1.3"' in manifest

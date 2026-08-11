@@ -288,7 +288,9 @@ class TailorResumeRequest(BaseModel):
     title: str = Field(default="", max_length=512)
     company: str = Field(default="", max_length=512)
     url: str = Field(default="", max_length=4096)
-    customization_mode: Literal["verified", "openai", "anthropic"] = "verified"
+    customization_mode: Literal[
+        "verified", "openai", "anthropic", "gemini", "kimi"
+    ] = "verified"
 
 
 class ResumeTargetOut(BaseModel):
@@ -298,9 +300,11 @@ class ResumeTargetOut(BaseModel):
 
 
 class ResumeCustomizationOut(BaseModel):
-    requested_mode: Literal["verified", "openai", "anthropic"] = "verified"
+    requested_mode: Literal[
+        "verified", "openai", "anthropic", "gemini", "kimi"
+    ] = "verified"
     applied_mode: Literal["verified", "ai"] = "verified"
-    provider: Literal["openai", "anthropic"] | None = None
+    provider: Literal["openai", "anthropic", "gemini", "kimi"] | None = None
     model: str | None = None
     rewritten_bullets: int = 0
     rejected_rewrites: int = 0
@@ -308,7 +312,7 @@ class ResumeCustomizationOut(BaseModel):
 
 
 class ResumeProviderOut(BaseModel):
-    id: Literal["verified", "openai", "anthropic"]
+    id: Literal["verified", "openai", "anthropic", "gemini", "kimi"]
     label: str
     available: bool
     model: str | None = None

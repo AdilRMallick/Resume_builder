@@ -58,7 +58,7 @@ async function loadProviders() {
     );
     byId("provider-note").textContent = availableAI.length
       ? "AI sends this job description and selected verified bullets to the chosen provider."
-      : "Add OPENAI_API_KEY or ANTHROPIC_API_KEY to .env, then restart JME to enable AI.";
+      : "Add an OpenAI, Anthropic, Gemini, or Moonshot key to .env, then restart JME.";
   } catch (_error) {
     byId("provider-note").textContent = "Provider status unavailable; verified mode remains ready.";
   }
