@@ -1,0 +1,20 @@
+EVIDENCE CORPUS GUIDE
+
+Only Markdown files under this directory are ingested. This text guide is therefore
+not part of the matching corpus.
+
+Add resume bullets to resume.md. Add one Markdown file per substantial project under
+projects/. Each bullet should name the work, mechanism, tools, and a result that can
+be defended in an interview. Keep unverified or aspirational skills out of Markdown.
+
+Useful commands:
+
+  jme evidence ingest --dry-run
+  jme evidence ingest
+  jme evidence list
+  jme evidence show 42
+  jme evidence tag 42 Redis Go
+  jme evidence version
+
+Repository READMEs can also be loaded directly through JME_EVIDENCE_REPOS rather
+than copied into this directory.

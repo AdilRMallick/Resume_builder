@@ -1,0 +1,36 @@
+{
+  "id": "744000123456789",
+  "uuid": "5f4727d2-0078-4099-b072-a81dba76a99e",
+  "name": "Software Engineer, University Graduate",
+  "company": {
+    "identifier": "NorthwindLabs",
+    "name": "Northwind Labs"
+  },
+  "location": {
+    "city": "Detroit",
+    "region": "MI",
+    "country": "us",
+    "remote": true
+  },
+  "jobAd": {
+    "sections": {
+      "companyDescription": {
+        "title": "Company Description",
+        "text": "&lt;p&gt;Northwind builds software for regional logistics networks.&lt;/p&gt;"
+      },
+      "jobDescription": {
+        "title": "Job Description",
+        "text": "<p>Build and operate Go services that process shipment events.</p><script>track()</script>"
+      },
+      "qualifications": {
+        "title": "Qualifications",
+        "text": "<ul><li>Experience with Go or Python</li><li>Working knowledge of PostgreSQL</li><li>Graduating by May 2027</li></ul>"
+      },
+      "additionalInformation": {
+        "title": "Additional Information",
+        "text": "<p>This role offers visa sponsorship.</p>"
+      }
+    }
+  },
+  "active": true
+}

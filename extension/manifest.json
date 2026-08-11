@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "JME Resume Tailor",
+  "version": "0.1.0",
+  "description": "Tailor Adil's verified resume to the job page open in the browser.",
+  "action": {
+    "default_title": "Tailor resume for this job"
+  },
+  "background": {
+    "service_worker": "service-worker.js"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "sidePanel"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1:8002/*",
+    "http://localhost:8002/*"
+  ]
+}

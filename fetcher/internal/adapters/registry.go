@@ -26,6 +26,7 @@ func NewRegistry(opts ...Option) *Registry {
 			NewGreenhouse(opts...),
 			NewLever(opts...),
 			NewAshby(opts...),
+			NewSmartRecruiters(opts...),
 			// Add new ATS adapters here. Nothing else needs to change.
 		},
 		fallback: NewFallback(),

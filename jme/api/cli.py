@@ -1,4 +1,4 @@
-"""`jme serve start` - run the read-only API under uvicorn."""
+"""`jme serve start` - run the local API and browser-extension backend under uvicorn."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from typing import Annotated
 
 import typer
 
-app = typer.Typer(help="Run the read-only HTTP API", no_args_is_help=True)
+app = typer.Typer(help="Run the local HTTP API", no_args_is_help=True)
 
 
 @app.command()

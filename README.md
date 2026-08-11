@@ -102,6 +102,7 @@ jme evidence ingest           # chunk + embed your evidence corpus
 jme rank run                  # hard filters, then vector ranking → shortlist
 jme match shortlist           # LLM match with citations back to evidence chunks
 jme report gap                # ← the payoff
+jme report digest             # daily brief: roles + citations + gaps + actions
 ```
 
 Every stage is independently runnable and independently useful.
@@ -116,6 +117,29 @@ The dashboard at `/` is a read-only view of the gap report, the shortlist, and q
 depth. It is one HTML file with no build step, no framework and no CDN, and it holds no
 data of its own — every panel fetches the same JSON endpoints the CLI uses, so it cannot
 show a number the API disagrees with.
+
+For a scheduled or inbox-friendly artifact, `jme report digest` combines the latest
+shortlist, each role's newest grounded match, its evidence citations, and the current
+gap ranking without making another LLM call. Use `--format json` for automation or
+`--output daily.md` to write the Markdown digest. The same JSON contract is available
+at `GET /digest`.
+
+### Browser resume tailor
+
+`extension/` contains an unpacked Chrome/Edge side-panel extension. While a job listing
+is open, click **Use current job page** to capture its visible description, or paste or
+upload a text/Markdown/HTML description. The local API selects and reorders verified
+bullets from `jme/resume/profile.json`, renders an editable one-page resume, and offers
+copy, standalone HTML download, and browser print-to-PDF.
+
+```bash
+jme serve start --port 8002
+```
+
+Then open `chrome://extensions` (or `edge://extensions`), enable Developer mode, choose
+**Load unpacked**, and select the repository's `extension/` directory. The extension has
+access only to the active tab after you click it and to the local API on port 8002. The
+job description and tailored output are not persisted or sent to an external service.
 
 ---
 
@@ -180,6 +204,11 @@ reporting gaps that have already been closed.
 token bucket in Redis shared across all worker processes, exponential backoff with
 jitter, circuit breaker per host, robots.txt respected, and a permanent cache by posting
 id — a successful resolution is never refetched.
+
+**Dedicated ATS adapters use public JSON APIs.** Greenhouse, Lever, Ashby, and
+SmartRecruiters posting URLs bypass page scraping and preserve structured description
+sections. Unknown hosts still degrade to the readability fallback rather than dropping
+the posting.
 
 ---
 

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JME Resume Tailor</title>
+  <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand-mark" aria-hidden="true">JM</div>
+    <div>
+      <p class="eyebrow">Local career intelligence</p>
+      <h1>Resume Tailor</h1>
+    </div>
+    <span class="server-state" id="server-state"><i></i><span>Checking</span></span>
+  </header>
+
+  <main>
+    <section class="intro">
+      <h2>Make this job-specific.</h2>
+      <p>Pull the description from your current page or paste one below. Your data stays on this computer.</p>
+    </section>
+
+    <section class="source-card">
+      <button class="page-button" id="use-page" type="button">
+        <span class="button-icon" aria-hidden="true">&#8595;</span>
+        <span><strong>Use current job page</strong><small>Extract the visible description automatically</small></span>
+      </button>
+
+      <div class="divider"><span>or paste / upload</span></div>
+
+      <label for="job-description">Job description</label>
+      <textarea id="job-description" rows="9" placeholder="Paste the complete job description here..."></textarea>
+      <div class="upload-row">
+        <label class="upload-button" for="job-file">Upload text file</label>
+        <input id="job-file" type="file" accept=".txt,.md,.html,.htm,text/plain,text/markdown,text/html">
+        <span id="character-count">0 characters</span>
+      </div>
+
+      <div class="target-grid">
+        <label>Role title<input id="job-title" type="text" placeholder="Software Engineer"></label>
+        <label>Company<input id="job-company" type="text" placeholder="Company"></label>
+      </div>
+
+      <button class="primary-button" id="tailor" type="button" disabled>
+        <span>Build tailored resume</span><span aria-hidden="true">&#8594;</span>
+      </button>
+      <p class="status-copy" id="status-copy" role="status">Start the local Job Match Engine to connect.</p>
+    </section>
+
+    <section class="result" id="result" hidden>
+      <div class="result-heading">
+        <div>
+          <p class="eyebrow">Verified output</p>
+          <h2>Your tailored resume</h2>
+        </div>
+        <span class="truth-badge">No rewritten claims</span>
+      </div>
+      <div class="match-chips" id="match-chips"></div>
+      <div class="resume-frame">
+        <article class="resume" id="resume" contenteditable="true" aria-label="Editable tailored resume"></article>
+      </div>
+      <p class="edit-note">Click any text to make final edits. The generated version only selects and reorders verified bullets.</p>
+      <div class="result-actions">
+        <button id="copy" type="button">Copy text</button>
+        <button id="download" type="button">Download HTML</button>
+        <button class="action-primary" id="print" type="button">Print / Save PDF</button>
+      </div>
+    </section>
+  </main>
+
+  <footer><span class="lock" aria-hidden="true">&#9679;</span> Local-only processing through <code>127.0.0.1:8002</code></footer>
+  <script src="sidepanel.js"></script>
+</body>
+</html>
