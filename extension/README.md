@@ -4,8 +4,10 @@ This unpacked Chrome/Edge extension opens as a side panel on a job page. It can 
 the visible description from the active tab or accept pasted/uploaded text, then sends
 that text to the local Job Match Engine at `127.0.0.1:8002`.
 
-The engine selects and reorders bullets from `jme/resume/profile.json`. It does not send
-the job description to a third party, call an LLM, rewrite bullets, or persist the page.
+The engine always starts by selecting and reordering bullets from
+`jme/resume/profile.json`. Verified mode stops there. OpenAI and Claude modes ask the
+local backend for evidence-linked rewrites, validate them, and fall back to verified
+mode on provider or validation failure. The extension never stores or receives API keys.
 
 ## Install locally
 
@@ -14,6 +16,10 @@ the job description to a third party, call an LLM, rewrite bullets, or persist t
 3. Enable **Developer mode**.
 4. Choose **Load unpacked** and select this `extension` directory.
 5. Pin **JME Resume Tailor**, open a job page, and click the extension icon.
+
+To enable an AI option, add `OPENAI_API_KEY` or `ANTHROPIC_API_KEY` to the repository's
+`.env` file before starting the application. Without either key, **Verified selection**
+remains fully usable.
 
 Use **Use current job page** for a normal listing, or paste/upload a `.txt`, `.md`, or
 `.html` job description. The result is editable in the panel and can be copied,

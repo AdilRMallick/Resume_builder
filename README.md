@@ -128,9 +128,19 @@ at `GET /digest`.
 
 `extension/` contains an unpacked Chrome/Edge side-panel extension. While a job listing
 is open, click **Use current job page** to capture its visible description, or paste or
-upload a text/Markdown/HTML description. The local API selects and reorders verified
-bullets from `jme/resume/profile.json`, renders an editable one-page resume, and offers
-copy, canonical Jake-template LaTeX download, and browser print-to-PDF.
+upload a text/Markdown/HTML description. The local API always selects relevant verified
+bullets from `jme/resume/profile.json`. You can keep that deterministic wording or ask
+OpenAI/Claude to propose evidence-linked rewrites; numeric, keyword, source, and target-
+banner checks run before any rewrite is accepted. The result remains an editable Jake-
+template resume with copy, LaTeX download, and browser print-to-PDF.
+
+AI is optional. Put one provider key in `.env` and restart the API:
+
+```dotenv
+OPENAI_API_KEY=your-key
+# or
+ANTHROPIC_API_KEY=your-key
+```
 
 ```bash
 jme serve start --port 8002
@@ -139,7 +149,8 @@ jme serve start --port 8002
 Then open `chrome://extensions` (or `edge://extensions`), enable Developer mode, choose
 **Load unpacked**, and select the repository's `extension/` directory. The extension has
 access only to the active tab after you click it and to the local API on port 8002. The
-job description and tailored output are not persisted or sent to an external service.
+extension never receives a provider key. Verified mode sends nothing externally; AI
+mode sends the job description and selected evidence to the provider you choose.
 
 ---
 

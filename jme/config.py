@@ -43,6 +43,14 @@ class Settings(BaseSettings):
     respect_robots: bool = Field(default=True, alias="JME_RESPECT_ROBOTS")
 
     # llm
+    openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")
+    resume_openai_model: str = Field(
+        default="gpt-5.6-terra", alias="JME_RESUME_OPENAI_MODEL"
+    )
+    resume_anthropic_model: str = Field(
+        default="claude-sonnet-5", alias="JME_RESUME_ANTHROPIC_MODEL"
+    )
+    resume_ai_timeout_sec: int = Field(default=90, alias="JME_RESUME_AI_TIMEOUT_SEC")
     anthropic_api_key: str | None = Field(default=None, alias="ANTHROPIC_API_KEY")
     anthropic_model: str = Field(default="claude-opus-5", alias="JME_ANTHROPIC_MODEL")
     anthropic_effort: str = Field(default="medium", alias="JME_ANTHROPIC_EFFORT")

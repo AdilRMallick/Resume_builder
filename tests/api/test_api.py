@@ -61,6 +61,7 @@ def test_resume_tailor_is_stateless_and_never_rewrites_bullets(client) -> None:
     assert body["role_focus"] == "swe"
     assert body["projects"][0]["organization"] == "Job Match Engine"
     assert body["source_rule"].endswith("no bullet was rewritten.")
+    assert body["customization"]["applied_mode"] == "verified"
     assert body["latex"].startswith("%-------------------------")
     assert "Tailored for" not in body["latex"]
     output_bullets = {
@@ -75,6 +76,49 @@ def test_resume_tailor_is_stateless_and_never_rewrites_bullets(client) -> None:
 def test_resume_tailor_rejects_an_empty_job_description(client) -> None:
     response = client.post("/resume/tailor", json={"job_description": "too short"})
     assert response.status_code == 422
+
+
+def test_resume_provider_status_never_exposes_keys(client, monkeypatch) -> None:
+    from jme.config import Settings
+
+    monkeypatch.setattr(
+        "jme.resume.ai.get_settings",
+        lambda: Settings(OPENAI_API_KEY="do-not-return-me", ANTHROPIC_API_KEY=None),
+    )
+    response = client.get("/resume/providers")
+    assert response.status_code == 200
+    body = response.json()
+    assert {item["id"] for item in body["providers"]} == {
+        "verified",
+        "openai",
+        "anthropic",
+    }
+    assert next(item for item in body["providers"] if item["id"] == "openai")[
+        "available"
+    ]
+    assert "do-not-return-me" not in response.text
+
+
+def test_resume_ai_failure_falls_back_to_verified_output(client, monkeypatch) -> None:
+    from jme.resume.ai import AIRewriteError
+
+    def fail(*args, **kwargs):
+        raise AIRewriteError("test provider unavailable")
+
+    monkeypatch.setattr("jme.api.app.customize_with_ai", fail)
+    response = client.post(
+        "/resume/tailor",
+        json={
+            "customization_mode": "openai",
+            "title": "Cloud Engineer",
+            "job_description": "Python AWS Docker Kubernetes Terraform " * 10,
+        },
+    )
+    assert response.status_code == 200
+    customization = response.json()["customization"]
+    assert customization["requested_mode"] == "openai"
+    assert customization["applied_mode"] == "verified"
+    assert "used verified-only" in customization["warning"]
 
 
 # --------------------------------------------------------------------------------------

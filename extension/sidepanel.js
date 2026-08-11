@@ -30,6 +30,7 @@ async function checkServer() {
     byId("server-state").className = "server-state ok";
     byId("server-state").lastElementChild.textContent = `Ready / evidence v${health.evidence_version}`;
     setStatus("Connected. Open a job page or paste a description.");
+    await loadProviders();
   } catch (_error) {
     serverReady = false;
     byId("server-state").className = "server-state bad";
@@ -39,6 +40,30 @@ async function checkServer() {
   updateCount();
 }
 
+async function loadProviders() {
+  try {
+    const response = await fetch(`${API}/resume/providers`);
+    if (!response.ok) throw new Error(String(response.status));
+    const data = await response.json();
+    for (const provider of data.providers) {
+      const option = byId("customization-mode").querySelector(`option[value="${provider.id}"]`);
+      if (!option) continue;
+      option.disabled = !provider.available;
+      option.textContent = provider.available
+        ? `${provider.label}${provider.model ? ` · ${provider.model}` : ""}`
+        : `${provider.label} (key not configured)`;
+    }
+    const availableAI = data.providers.filter(
+      (provider) => provider.id !== "verified" && provider.available
+    );
+    byId("provider-note").textContent = availableAI.length
+      ? "AI sends this job description and selected verified bullets to the chosen provider."
+      : "Add OPENAI_API_KEY or ANTHROPIC_API_KEY to .env, then restart JME to enable AI.";
+  } catch (_error) {
+    byId("provider-note").textContent = "Provider status unavailable; verified mode remains ready.";
+  }
+}
+
 function renderEntry(entry) {
   const organization = entry.url
     ? `<a href="${escapeHTML(entry.url)}">${escapeHTML(entry.organization)}</a>`
@@ -46,7 +71,13 @@ function renderEntry(entry) {
   return `<div class="entry">
     <div class="entry-head"><span>${organization}</span><span>${escapeHTML(entry.location || entry.dates)}</span></div>
     <div class="entry-sub"><span>${escapeHTML(entry.title)}</span><span>${entry.location ? escapeHTML(entry.dates) : ""}</span></div>
-    <ul>${entry.bullets.map((bullet) => `<li>${escapeHTML(bullet.text)}</li>`).join("")}</ul>
+    <ul>${entry.bullets.map((bullet) => {
+      const className = bullet.ai_rewritten ? "ai-rewritten" : "";
+      const original = bullet.source_text
+        ? ` title="Original: ${escapeHTML(bullet.source_text)}"`
+        : "";
+      return `<li class="${className}"${original}>${escapeHTML(bullet.text)}</li>`;
+    }).join("")}</ul>
   </div>`;
 }
 
@@ -73,6 +104,14 @@ function renderResume(data) {
     ${renderSection("Projects", data.projects)}
     ${renderSection("Leadership", data.leadership)}
     <section><h3>Technical Skills</h3><div class="skills">${skills}<div><strong>Certifications:</strong> ${data.certifications.map(escapeHTML).join(", ")}</div></div></section>`;
+  const customization = data.customization;
+  if (customization.applied_mode === "ai") {
+    byId("truth-badge").textContent = `${customization.rewritten_bullets} AI rewrites`;
+    byId("edit-note").textContent = "Blue-marked bullets were rewritten from verified evidence. Hover to see the original and review before using.";
+  } else {
+    byId("truth-badge").textContent = "Verified selection";
+    byId("edit-note").textContent = "No bullet wording was changed; evidence was selected and reordered only.";
+  }
   byId("result").hidden = false;
   byId("result").scrollIntoView({ behavior: "smooth", block: "start" });
 }
@@ -117,12 +156,17 @@ byId("tailor").addEventListener("click", async () => {
         title: byId("job-title").value,
         company: byId("job-company").value,
         url: currentUrl,
+        customization_mode: byId("customization-mode").value,
       }),
     });
     if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
     const data = await response.json();
     renderResume(data);
-    setStatus(`${data.matched_skills.length} relevant evidence signals found. No bullet was rewritten.`);
+    const customization = data.customization;
+    const message = customization.applied_mode === "ai"
+      ? `${customization.rewritten_bullets} evidence-grounded bullets rewritten by ${customization.provider}. ${customization.rejected_rewrites} rejected by validation.`
+      : `${data.matched_skills.length} relevant evidence signals found. No bullet was rewritten.`;
+    setStatus(customization.warning ? `${message} ${customization.warning}` : message);
   } catch (error) {
     setStatus(`Tailoring failed: ${error.message}`, true);
   } finally {
