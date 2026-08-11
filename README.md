@@ -15,6 +15,85 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for the design and the reasoning behind i
 
 ---
 
+## Easiest setup: resume-tailoring Chrome extension
+
+This is the shortest path if you only want to open a job listing and generate a
+tailored Jake-template resume. It needs **Python 3.11+ and Chrome or Edge**. It does
+not need Docker, Postgres, Redis, Go, or an API key.
+
+First, use GitHub's **Code → Download ZIP** and extract it, or clone the repository.
+Open the extracted repository folder—the one containing this README—in PowerShell.
+
+### 1. Install and start the local backend (Windows PowerShell)
+
+Open PowerShell in the repository folder and run:
+
+```powershell
+py -3.11 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\.venv\Scripts\python.exe -m pip install -e .
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+.\.venv\Scripts\jme.exe serve start --port 8002
+```
+
+Keep that PowerShell window open. When it says Uvicorn is running, the backend is
+ready at <http://127.0.0.1:8002>.
+
+The setup command creates `.env` only when it is missing, so rerunning it will not erase
+any API keys you added.
+
+### 2. Load the extension once
+
+1. Open `chrome://extensions` in Chrome or `edge://extensions` in Edge.
+2. Turn on **Developer mode**.
+3. Click **Load unpacked**.
+4. Select this repository's `extension` folder.
+5. Pin **JME Resume Tailor** from the browser's Extensions menu.
+
+### 3. Tailor a resume
+
+1. Open a job listing.
+2. Click **JME Resume Tailor** to open its side panel.
+3. Click **Use current job page**, or paste/upload the job description.
+4. Leave **Verified selection** selected, or choose a configured AI provider.
+5. Click **Build tailored resume**.
+6. Edit the result if needed, then copy it, download Jake-template LaTeX, or print it
+   to PDF.
+
+Verified mode works immediately and never calls an AI provider. To enable AI rewriting,
+open `.env`, add exactly one key, save the file, stop the server with `Ctrl+C`, and run
+the start command again:
+
+```dotenv
+GEMINI_API_KEY=your-key-here
+# or OPENAI_API_KEY=your-key-here
+# or ANTHROPIC_API_KEY=your-key-here
+# or MOONSHOT_API_KEY=your-key-here
+```
+
+```powershell
+.\.venv\Scripts\jme.exe serve start --port 8002
+```
+
+For later use, you only need to open PowerShell in the repository, run that final start
+command, and click the extension. You do not need to reinstall it each time. After the
+extension code changes, click its **Reload** button on `chrome://extensions`.
+
+<details>
+<summary>macOS/Linux commands</summary>
+
+```bash
+python3 -m venv .venv
+./.venv/bin/python -m pip install --upgrade pip
+./.venv/bin/python -m pip install -e .
+[ -f .env ] || cp .env.example .env
+./.venv/bin/jme serve start --port 8002
+```
+
+</details>
+
+---
+
 ## Architecture
 
 Three processes plus an API. No shared code between services; the contract is Redis
@@ -68,7 +147,7 @@ clean service boundary, so the language split costs nothing architecturally.
 
 ---
 
-## Quick start
+## Full job-match pipeline setup
 
 Requires Docker, Python 3.11+, and Go 1.23+.
 
