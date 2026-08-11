@@ -130,7 +130,7 @@ at `GET /digest`.
 is open, click **Use current job page** to capture its visible description, or paste or
 upload a text/Markdown/HTML description. The local API selects and reorders verified
 bullets from `jme/resume/profile.json`, renders an editable one-page resume, and offers
-copy, standalone HTML download, and browser print-to-PDF.
+copy, canonical Jake-template LaTeX download, and browser print-to-PDF.
 
 ```bash
 jme serve start --port 8002

@@ -17,4 +17,4 @@ the job description to a third party, call an LLM, rewrite bullets, or persist t
 
 Use **Use current job page** for a normal listing, or paste/upload a `.txt`, `.md`, or
 `.html` job description. The result is editable in the panel and can be copied,
-downloaded as standalone HTML, or printed to PDF.
+downloaded as canonical Jake-template LaTeX, or printed to PDF.

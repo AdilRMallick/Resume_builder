@@ -36,3 +36,13 @@ def test_page_capture_is_user_triggered_and_tailoring_stays_local() -> None:
     assert 'sendMessage({ type: "extract-active-job-page" })' in panel
     assert 'message.type !== "extract-active-job-page"' in worker
     assert "chrome.scripting.executeScript" in worker
+
+
+def test_resume_preview_never_renders_a_target_job_banner() -> None:
+    panel = (ROOT / "sidepanel.js").read_text(encoding="utf-8")
+    html = (ROOT / "sidepanel.html").read_text(encoding="utf-8")
+    assert "Tailored for:" not in panel
+    assert 'class="target"' not in panel
+    assert "Selected Projects" not in panel
+    assert "Download .tex" in html
+    assert "currentTailoredResume.latex" in panel

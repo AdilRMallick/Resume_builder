@@ -8,6 +8,7 @@ const escapeHTML = (value) => String(value ?? "").replace(/[&<>"']/g, (character
 
 let currentUrl = "";
 let serverReady = false;
+let currentTailoredResume = null;
 
 function updateCount() {
   const length = byId("job-description").value.length;
@@ -54,10 +55,10 @@ function renderSection(title, entries) {
 }
 
 function renderResume(data) {
+  currentTailoredResume = data;
   const contacts = data.contact.map((item) => item.url
     ? `<a href="${escapeHTML(item.url)}">${escapeHTML(item.value)}</a>`
     : escapeHTML(item.value)).join(" &nbsp;|&nbsp; ");
-  const target = [data.target.company, data.target.title].filter(Boolean).join(" - ") || "Pasted job description";
   const skills = Object.entries(data.skills).map(([category, values]) =>
     `<div><strong>${escapeHTML(category)}:</strong> ${values.map(escapeHTML).join(", ")}</div>`
   ).join("");
@@ -66,12 +67,10 @@ function renderResume(data) {
     .map((skill) => `<span class="match-chip">${escapeHTML(skill)}</span>`).join("");
   byId("resume").innerHTML = `
     <h2>${escapeHTML(data.name)}</h2>
-    <p class="headline">${escapeHTML(data.headline)}</p>
     <div class="contact">${contacts}</div>
-    <p class="target"><strong>Tailored for:</strong> ${escapeHTML(target)}</p>
     ${renderSection("Education", data.education)}
     ${renderSection("Experience", data.experience)}
-    ${renderSection("Selected Projects", data.projects)}
+    ${renderSection("Projects", data.projects)}
     ${renderSection("Leadership", data.leadership)}
     <section><h3>Technical Skills</h3><div class="skills">${skills}<div><strong>Certifications:</strong> ${data.certifications.map(escapeHTML).join(", ")}</div></div></section>`;
   byId("result").hidden = false;
@@ -138,15 +137,14 @@ byId("copy").addEventListener("click", async () => {
 });
 
 byId("download").addEventListener("click", () => {
-  const styles = `body{margin:0;background:#fff}.resume{width:7.4in;margin:auto;padding:.45in .55in;color:#171b24;font:10px/1.35 Arial,sans-serif}.resume h2{text-align:center;text-transform:uppercase}.resume .headline,.resume .contact{text-align:center}.resume .target{padding:7px;border-left:3px solid #5877e8;background:#f2f4fa}.resume section{margin-top:10px}.resume h3{border-bottom:1px solid #222;text-transform:uppercase;font-size:11px}.entry-head,.entry-sub{display:flex;justify-content:space-between}.entry-head{font-weight:bold}.entry-sub{font-style:italic;color:#555}.resume ul{margin:3px 0;padding-left:17px}`;
-  const documentHTML = `<!doctype html><html><head><meta charset="utf-8"><title>Tailored Resume</title><style>${styles}</style></head><body>${byId("resume").outerHTML}</body></html>`;
-  const href = URL.createObjectURL(new Blob([documentHTML], { type: "text/html" }));
+  if (!currentTailoredResume) return;
+  const href = URL.createObjectURL(new Blob([currentTailoredResume.latex], { type: "application/x-tex" }));
   const anchor = document.createElement("a");
   anchor.href = href;
-  anchor.download = "Adil_Mallick_Tailored_Resume.html";
+  anchor.download = "Adil_Mallick_Tailored_Resume.tex";
   anchor.click();
   URL.revokeObjectURL(href);
-  setStatus("Downloaded an editable, printable HTML resume.");
+  setStatus("Downloaded the canonical Jake-template LaTeX resume.");
 });
 
 byId("print").addEventListener("click", () => window.print());

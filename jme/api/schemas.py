@@ -295,9 +295,12 @@ class ResumeTargetOut(BaseModel):
 
 
 class TailoredResumeOut(ResumeProfileOut):
+    template_id: str
+    role_focus: str
     target: ResumeTargetOut
     matched_skills: list[str] = Field(default_factory=list)
     source_rule: str
+    latex: str
 
 
 # --------------------------------------------------------------------------------------

@@ -1,0 +1,51 @@
+{
+  "template_id": "jake-gutierrez",
+  "canonical_source": "https://github.com/jakegut/resume/blob/master/resume.tex",
+  "document": {
+    "paper": "letterpaper",
+    "font_size_pt": 11,
+    "ats_text_enabled": true,
+    "one_page": true
+  },
+  "header": {
+    "allowed": ["name", "contact"],
+    "forbidden": ["target_job", "objective", "summary", "headline"]
+  },
+  "section_order": [
+    "Education",
+    "Experience",
+    "Projects",
+    "Leadership",
+    "Technical Skills"
+  ],
+  "project_limits": {
+    "entries": 3,
+    "bullets_per_entry": 2,
+    "bullets_total": 5
+  },
+  "keyword_policy": {
+    "mode": "verified_only",
+    "description": "Job-description keywords may reorder verified bullets and skills but may never create or rewrite a claim."
+  },
+  "role_signals": {
+    "swe": [
+      "software engineer", "backend", "frontend", "full stack", "full-stack", "api",
+      "distributed systems", "algorithms", "data structures", "java", "python", "go"
+    ],
+    "cloud": [
+      "cloud", "infrastructure", "devops", "site reliability", "platform engineer",
+      "aws", "azure", "terraform", "kubernetes", "docker", "ci/cd", "observability"
+    ],
+    "apm": [
+      "associate product manager", "product manager", "product management", "product",
+      "roadmap", "users", "customer", "analytics", "cross-functional", "stakeholder",
+      "go-to-market", "prioritization", "experimentation"
+    ]
+  },
+  "research_sources": [
+    "https://github.com/jakegut/resume/blob/master/resume.tex",
+    "https://github.com/okHadi/okHadi/blob/main/CV/SWE.tex",
+    "https://github.com/manisnitt/myresume/blob/main/main.tex",
+    "https://github.com/saifyxpro/resumind-ai/blob/main/examples/product_manager_resume.tex"
+  ]
+}

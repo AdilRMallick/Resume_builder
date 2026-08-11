@@ -57,8 +57,12 @@ def test_resume_tailor_is_stateless_and_never_rewrites_bullets(client) -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["target"]["title"] == "Python Backend Engineer"
+    assert body["template_id"] == "jake-gutierrez"
+    assert body["role_focus"] == "swe"
     assert body["projects"][0]["organization"] == "Job Match Engine"
     assert body["source_rule"].endswith("no bullet was rewritten.")
+    assert body["latex"].startswith("%-------------------------")
+    assert "Tailored for" not in body["latex"]
     output_bullets = {
         bullet["text"]
         for section in ("education", "experience", "projects", "leadership")

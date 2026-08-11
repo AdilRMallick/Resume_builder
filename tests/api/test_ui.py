@@ -27,6 +27,7 @@ from jme.api.schemas import (
     ShortlistItem,
     ShortlistOut,
     StreamStatus,
+    TailoredResumeOut,
 )
 
 pytestmark = pytest.mark.integration
@@ -87,6 +88,7 @@ DASHBOARD_FIELDS = {
     ResumeContactOut: ["label", "value", "url"],
     ResumeEntryOut: ["organization", "location", "title", "dates", "url", "bullets"],
     ResumeBulletOut: ["text", "tags"],
+    TailoredResumeOut: ["template_id", "role_focus", "target", "matched_skills", "source_rule", "latex"],
     QueueStatus: ["streams"],
     StreamStatus: [
         "stream", "group", "depth", "pending", "consumers", "oldest_pending_age_sec",
@@ -126,6 +128,14 @@ def test_resume_studio_fetches_posting_detail_for_the_selected_role() -> None:
     assert "/postings/{posting_id}" in routes
     assert "/resume/tailor" in routes
     assert 'fetch("/resume/tailor"' in html
+
+
+def test_resume_studio_never_renders_a_target_job_banner() -> None:
+    html = DASHBOARD.read_text(encoding="utf-8")
+    assert "Tailored for:" not in html
+    assert "resume-target" not in html
+    assert "Selected Projects" not in html
+    assert "latestTailoredResume.latex" in html
 
 
 def test_dashboard_reports_a_missing_asset_instead_of_a_blank_500(client, monkeypatch) -> None:

@@ -71,7 +71,7 @@
       "bullets": [
         {
           "text": "Shipped a Microsoft Teams chatbot for more than 500 enterprise users as a TypeScript Azure Function with Power Automate, ServiceNow REST APIs, and Azure API Management.",
-          "tags": ["typescript", "azure", "functions", "rest", "api", "chatbot", "servicenow", "cloud"]
+          "tags": ["typescript", "azure", "functions", "rest", "api", "chatbot", "servicenow", "cloud", "enterprise users", "user-facing product"]
         },
         {
           "text": "Debugged REST routing and validated JSON payloads with Postman, cutting chatbot query response time by 27 percent.",
@@ -90,7 +90,7 @@
       "bullets": [
         {
           "text": "Built cross-platform task-management features for a desktop productivity app published on the Mac App Store and Microsoft Store, offloading main-process work through Electron IPC to cut measured idle RAM use by 35 percent.",
-          "tags": ["react", "next.js", "typescript", "electron", "desktop", "performance", "ipc"]
+          "tags": ["react", "next.js", "typescript", "electron", "desktop", "performance", "ipc", "product", "product development", "user-facing product"]
         },
         {
           "text": "Automated email-list data workflows with Python, smtplib, and pandas.",
@@ -227,7 +227,7 @@
       "bullets": [
         {
           "text": "Built the volunteer recruitment pipeline and coordinated logistics for a public food bank in the Michigan State University Union for a council that secured more than $1 million in Michigan MiLeap grant funding.",
-          "tags": ["leadership", "communication", "operations", "project management"]
+          "tags": ["leadership", "communication", "operations", "project management", "stakeholder coordination"]
         }
       ]
     }

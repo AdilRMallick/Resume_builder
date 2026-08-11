@@ -271,10 +271,8 @@
   }
   .resume-sheet:focus { outline: 3px solid var(--accent); outline-offset: 3px; }
   .resume-name { margin: 0; text-align: center; color: #10131a; font-size: 24px; line-height: 1; letter-spacing: 0.04em; text-transform: uppercase; }
-  .resume-headline { margin: 7px 0 5px; text-align: center; color: #4b5364; font-size: 9px; }
   .resume-contact { margin-bottom: 13px; text-align: center; color: #333947; font-size: 8px; }
   .resume-contact a { color: inherit; text-decoration-color: #9097a6; }
-  .resume-target { margin: 0 0 13px; padding: 7px 9px; border-left: 3px solid #5877e8; color: #46506a; background: #f4f6fc; font-size: 8px; }
   .resume-section { margin-top: 11px; }
   .resume-section-title { margin: 0 0 6px; padding-bottom: 2px; border-bottom: 1px solid #202633; color: #161b25; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; }
   .resume-entry { margin-top: 7px; }
@@ -440,6 +438,7 @@
         <p class="studio-trust"><span class="trust-mark">&#10003;</span>Bullets are selected and reordered from your verified bank. The engine does not rewrite claims or add keywords you cannot defend.</p>
         <div class="studio-actions">
           <button id="copy-resume" type="button" disabled>Copy text</button>
+          <button id="download-tex" type="button" disabled>Download .tex</button>
           <button id="print-resume" type="button" disabled>Print / PDF</button>
         </div>
       </aside>
@@ -495,6 +494,7 @@ const el = (id) => document.getElementById(id);
 const text = (value) => (value === null || value === undefined || value === "" ? "\u2014" : String(value));
 let resumeProfile = null;
 let shortlistItems = [];
+let latestTailoredResume = null;
 
 function table(columns, rows) {
   if (!rows.length) return '<p class="empty">Nothing to show yet.</p>';
@@ -669,6 +669,7 @@ async function tailorResume() {
     });
     if (!tailorResponse.ok) throw new Error(`${tailorResponse.status} ${tailorResponse.statusText}`);
     const tailored = await tailorResponse.json();
+    latestTailoredResume = tailored;
     const context = normalize(jobDescription);
     const matchedSkills = tailored.matched_skills.slice(0, 10);
     const contacts = tailored.contact.map((item) => item.url
@@ -679,12 +680,10 @@ async function tailorResume() {
       : '<div class="match-strip"><span class="match-chip">Title-based ordering</span></div>';
     el("resume-preview").innerHTML = `${chips}<article class="resume-sheet" contenteditable="true" aria-label="Editable tailored resume">
       <h2 class="resume-name">${escapeHTML(tailored.name)}</h2>
-      <p class="resume-headline">${escapeHTML(tailored.headline)}</p>
       <div class="resume-contact">${contacts}</div>
-      <p class="resume-target"><strong>Tailored for:</strong> ${escapeHTML(posting.company)} \u2014 ${escapeHTML(posting.title)}</p>
       ${resumeSection("Education", tailored.education, context)}
       ${resumeSection("Experience", tailored.experience, context)}
-      ${resumeSection("Selected Projects", tailored.projects, context)}
+      ${resumeSection("Projects", tailored.projects, context)}
       ${resumeSection("Leadership", tailored.leadership, context)}
       <section class="resume-section"><h3 class="resume-section-title">Technical Skills</h3><div class="resume-skills">${orderedSkills(tailored.skills, context)}<div><strong>Certifications:</strong> ${tailored.certifications.map(escapeHTML).join(", ")}</div></div></section>
     </article>`;
@@ -692,6 +691,7 @@ async function tailorResume() {
       ? `Prioritized against ${requirements.length} extracted requirements using the shared tailoring engine. Click any text to edit.`
       : "No extracted requirements were available, so projects were prioritized from the job title.";
     el("copy-resume").disabled = false;
+    el("download-tex").disabled = false;
     el("print-resume").disabled = false;
   } catch (error) {
     el("studio-status").textContent = `Could not build resume: ${error.message}`;
@@ -762,6 +762,16 @@ el("copy-resume").addEventListener("click", async () => {
   if (!sheet) return;
   await navigator.clipboard.writeText(sheet.innerText);
   el("studio-status").textContent = "Resume text copied to clipboard.";
+});
+el("download-tex").addEventListener("click", () => {
+  if (!latestTailoredResume) return;
+  const href = URL.createObjectURL(new Blob([latestTailoredResume.latex], { type: "application/x-tex" }));
+  const anchor = document.createElement("a");
+  anchor.href = href;
+  anchor.download = "Adil_Mallick_Tailored_Resume.tex";
+  anchor.click();
+  URL.revokeObjectURL(href);
+  el("studio-status").textContent = "Jake-template LaTeX downloaded.";
 });
 el("print-resume").addEventListener("click", () => window.print());
 refresh();

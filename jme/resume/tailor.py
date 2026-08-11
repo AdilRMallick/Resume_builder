@@ -14,11 +14,19 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+from jme.resume.latex import render_jake_latex
+
 PROFILE_PATH = Path(__file__).with_name("profile.json")
+RULES_PATH = Path(__file__).with_name("jake_template_rules.json")
 
 
 def load_profile(path: Path = PROFILE_PATH) -> dict[str, Any]:
     """Load the package-owned, verified resume profile."""
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def load_rules(path: Path = RULES_PATH) -> dict[str, Any]:
+    """Load the permanent Jake-template and keyword-selection contract."""
     return json.loads(path.read_text(encoding="utf-8"))
 
 
@@ -67,6 +75,33 @@ def _order_skills(skills: dict[str, list[str]], context: str) -> dict[str, list[
     }
 
 
+def _detect_role(context: str, rules: dict[str, Any]) -> str:
+    scores = {
+        role: sum(1 for signal in signals if _contains(context, signal))
+        for role, signals in rules["role_signals"].items()
+    }
+    return max(scores, key=lambda role: (scores[role], role == "swe"))
+
+
+def _select_projects(
+    projects: list[dict[str, Any]], context: str, rules: dict[str, Any]
+) -> list[dict[str, Any]]:
+    limits = rules["project_limits"]
+    ranked = list(enumerate(projects))
+    ranked.sort(key=lambda item: (-_entry_score(item[1], context), item[0]))
+    selected: list[dict[str, Any]] = []
+    remaining = int(limits["bullets_total"])
+    for _, entry in ranked[: int(limits["entries"])]:
+        ordered = _order_bullets(entry, context)
+        take = min(int(limits["bullets_per_entry"]), remaining)
+        ordered["bullets"] = ordered["bullets"][:take]
+        selected.append(ordered)
+        remaining -= take
+        if remaining <= 0:
+            break
+    return selected
+
+
 def tailor_profile(
     profile: dict[str, Any],
     *,
@@ -74,14 +109,13 @@ def tailor_profile(
     title: str = "",
     company: str = "",
     url: str = "",
-    project_limit: int = 3,
 ) -> dict[str, Any]:
     """Return a one-page-oriented profile ordered for a target job description."""
     context = _normalize(f"{title}\n{job_description}")
-    projects = list(enumerate(profile.get("projects", [])))
-    projects.sort(key=lambda item: (-_entry_score(item[1], context), item[0]))
-
-    return {
+    rules = load_rules()
+    result = {
+        "template_id": rules["template_id"],
+        "role_focus": _detect_role(context, rules),
         "target": {"company": company, "title": title, "url": url},
         "matched_skills": _matched_tags(profile, context),
         "name": profile["name"],
@@ -93,9 +127,7 @@ def tailor_profile(
         "experience": [
             _order_bullets(entry, context) for entry in profile.get("experience", [])
         ],
-        "projects": [
-            _order_bullets(entry, context) for _, entry in projects[:project_limit]
-        ],
+        "projects": _select_projects(profile.get("projects", []), context, rules),
         "leadership": [
             _order_bullets(entry, context) for entry in profile.get("leadership", [])
         ],
@@ -103,3 +135,5 @@ def tailor_profile(
         "certifications": copy.deepcopy(profile.get("certifications", [])),
         "source_rule": "Selected and reordered from the verified profile; no bullet was rewritten.",
     }
+    result["latex"] = render_jake_latex(result)
+    return result
