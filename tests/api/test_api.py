@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import base64
+
 import pytest
 
 from .conftest import EVIDENCE_VERSION, LATEST_RUN, OLDER_RUN
@@ -57,8 +59,13 @@ def test_resume_tailor_is_stateless_and_never_rewrites_bullets(client) -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["target"]["title"] == "Python Backend Engineer"
+    assert body["template_id"] == "jake-gutierrez"
+    assert body["role_focus"] == "swe"
     assert body["projects"][0]["organization"] == "Job Match Engine"
     assert body["source_rule"].endswith("no bullet was rewritten.")
+    assert body["customization"]["applied_mode"] == "verified"
+    assert body["latex"].startswith("%-------------------------")
+    assert "Tailored for" not in body["latex"]
     output_bullets = {
         bullet["text"]
         for section in ("education", "experience", "projects", "leadership")
@@ -71,6 +78,80 @@ def test_resume_tailor_is_stateless_and_never_rewrites_bullets(client) -> None:
 def test_resume_tailor_rejects_an_empty_job_description(client) -> None:
     response = client.post("/resume/tailor", json={"job_description": "too short"})
     assert response.status_code == 422
+
+
+def test_resume_tailor_can_return_a_locally_compiled_pdf(client, monkeypatch) -> None:
+    from jme.resume.pdf import CompiledPDF
+
+    monkeypatch.setattr(
+        "jme.api.app.compile_one_page_resume",
+        lambda result, **kwargs: (
+            result,
+            CompiledPDF(b"%PDF-1.7\ncompiled with LaTeX", 1),
+            2,
+        ),
+    )
+    response = client.post(
+        "/resume/tailor",
+        json={
+            "render_pdf": True,
+            "job_description": "Python FastAPI PostgreSQL Redis Docker REST API AWS " * 8,
+        },
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert base64.b64decode(body["pdf_base64"]).startswith(b"%PDF-1.7")
+    assert body["pdf_error"] is None
+    assert body["pdf_pages"] == 1
+    assert body["pdf_omitted_bullets"] == 2
+
+
+def test_resume_provider_status_never_exposes_keys(client, monkeypatch) -> None:
+    from jme.config import Settings
+
+    monkeypatch.setattr(
+        "jme.resume.ai.get_settings",
+        lambda: Settings(OPENAI_API_KEY="do-not-return-me", ANTHROPIC_API_KEY=None),
+    )
+    response = client.get("/resume/providers")
+    assert response.status_code == 200
+    body = response.json()
+    assert {item["id"] for item in body["providers"]} == {
+        "verified",
+        "openai",
+        "anthropic",
+        "gemini",
+        "kimi",
+    }
+    assert next(item for item in body["providers"] if item["id"] == "openai")[
+        "available"
+    ]
+    assert "do-not-return-me" not in response.text
+
+
+@pytest.mark.parametrize("mode", ["openai", "anthropic", "gemini", "kimi"])
+def test_resume_ai_failure_falls_back_to_verified_output(
+    client, monkeypatch, mode
+) -> None:
+    from jme.resume.ai import AIRewriteError
+
+    def fail(*args, **kwargs):
+        raise AIRewriteError("test provider unavailable")
+
+    monkeypatch.setattr("jme.api.app.customize_with_ai", fail)
+    response = client.post(
+        "/resume/tailor",
+        json={
+            "customization_mode": mode,
+            "title": "Cloud Engineer",
+            "job_description": "Python AWS Docker Kubernetes Terraform " * 10,
+        },
+    )
+    assert response.status_code == 200
+    customization = response.json()["customization"]
+    assert customization["requested_mode"] == mode
+    assert customization["applied_mode"] == "verified"
+    assert "used verified-only" in customization["warning"]
 
 
 # --------------------------------------------------------------------------------------

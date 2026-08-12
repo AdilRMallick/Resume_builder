@@ -15,6 +15,88 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for the design and the reasoning behind i
 
 ---
 
+## Easiest setup: resume-tailoring Chrome extension
+
+This is the shortest path if you only want to open a job listing and generate a
+tailored Jake-template resume. It needs **Python 3.11+ and Chrome or Edge**. It does
+not need Docker, Postgres, Redis, Go, or an API key.
+
+First, use GitHub's **Code → Download ZIP** and extract it, or clone the repository.
+Open the extracted repository folder—the one containing this README—in PowerShell.
+
+### 1. Install and start the local backend (Windows PowerShell)
+
+Open PowerShell in the repository folder and run:
+
+```powershell
+py -3.11 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\.venv\Scripts\python.exe -m pip install -e .
+powershell -ExecutionPolicy Bypass -File .\scripts\install-tectonic.ps1
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+.\.venv\Scripts\jme.exe serve start --port 8002
+```
+
+Keep that PowerShell window open. When it says Uvicorn is running, the backend is
+ready at <http://127.0.0.1:8002>.
+
+The setup command creates `.env` only when it is missing, so rerunning it will not erase
+any API keys you added. Tectonic is the local LaTeX engine: its first PDF compile downloads
+the TeX support bundle, then later compiles use the cache. Resume data is not uploaded to
+an online LaTeX service.
+
+### 2. Load the extension once
+
+1. Open `chrome://extensions` in Chrome or `edge://extensions` in Edge.
+2. Turn on **Developer mode**.
+3. Click **Load unpacked**.
+4. Select this repository's `extension` folder.
+5. Pin **JME Resume Tailor** from the browser's Extensions menu.
+
+### 3. Tailor a resume
+
+1. Open a job listing.
+2. Click **JME Resume Tailor** to open its side panel.
+3. Click **Use current job page**, or paste/upload the job description.
+4. Leave **Verified selection** selected, or choose a configured AI provider.
+5. Click **Build tailored resume**.
+6. Review the real compiled PDF, then copy its text or download the `.tex` or `.pdf` file.
+
+Verified mode works immediately and never calls an AI provider. To enable AI rewriting,
+open `.env`, add exactly one key, save the file, stop the server with `Ctrl+C`, and run
+the start command again:
+
+```dotenv
+GEMINI_API_KEY=your-key-here
+# or OPENAI_API_KEY=your-key-here
+# or ANTHROPIC_API_KEY=your-key-here
+# or MOONSHOT_API_KEY=your-key-here
+```
+
+```powershell
+.\.venv\Scripts\jme.exe serve start --port 8002
+```
+
+For later use, you only need to open PowerShell in the repository, run that final start
+command, and click the extension. You do not need to reinstall it each time. After the
+extension code changes, click its **Reload** button on `chrome://extensions`.
+
+<details>
+<summary>macOS/Linux commands</summary>
+
+```bash
+python3 -m venv .venv
+./.venv/bin/python -m pip install --upgrade pip
+./.venv/bin/python -m pip install -e .
+# Install Tectonic from https://tectonic-typesetting.github.io/book/latest/installation/
+[ -f .env ] || cp .env.example .env
+./.venv/bin/jme serve start --port 8002
+```
+
+</details>
+
+---
+
 ## Architecture
 
 Three processes plus an API. No shared code between services; the contract is Redis
@@ -68,7 +150,7 @@ clean service boundary, so the language split costs nothing architecturally.
 
 ---
 
-## Quick start
+## Full job-match pipeline setup
 
 Requires Docker, Python 3.11+, and Go 1.23+.
 
@@ -128,9 +210,27 @@ at `GET /digest`.
 
 `extension/` contains an unpacked Chrome/Edge side-panel extension. While a job listing
 is open, click **Use current job page** to capture its visible description, or paste or
-upload a text/Markdown/HTML description. The local API selects and reorders verified
-bullets from `jme/resume/profile.json`, renders an editable one-page resume, and offers
-copy, standalone HTML download, and browser print-to-PDF.
+upload a text/Markdown/HTML description. The local API always selects relevant verified
+bullets from `jme/resume/profile.json`. You can keep that deterministic wording or ask
+OpenAI, Claude, Gemini, or Kimi to propose evidence-linked rewrites; numeric, keyword, source, and target-
+banner checks run before any rewrite is accepted. The result uses Jake's canonical LaTeX
+layout and is compiled locally into the PDF shown in the extension.
+
+AI is optional. Put one provider key in `.env` and restart the API:
+
+```dotenv
+OPENAI_API_KEY=your-key
+# or
+ANTHROPIC_API_KEY=your-key
+# or
+GEMINI_API_KEY=your-key
+# or (Kimi)
+MOONSHOT_API_KEY=your-key
+```
+
+Gemini offers a limited free API tier. Google states that free-tier content may be used
+to improve its products; use a paid tier if that tradeoff is not acceptable for resume
+data. Kimi API usage is billed separately by Moonshot.
 
 ```bash
 jme serve start --port 8002
@@ -139,7 +239,8 @@ jme serve start --port 8002
 Then open `chrome://extensions` (or `edge://extensions`), enable Developer mode, choose
 **Load unpacked**, and select the repository's `extension/` directory. The extension has
 access only to the active tab after you click it and to the local API on port 8002. The
-job description and tailored output are not persisted or sent to an external service.
+extension never receives a provider key. Verified mode sends nothing externally; AI
+mode sends the job description and selected evidence to the provider you choose.
 
 ---
 

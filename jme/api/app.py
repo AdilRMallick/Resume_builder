@@ -18,6 +18,7 @@ a plain function and not a module-level global.
 
 from __future__ import annotations
 
+import base64
 import datetime as dt
 import json
 from collections.abc import Iterator
@@ -43,6 +44,7 @@ from jme.api.schemas import (
     QueueStatus,
     RequirementOut,
     ResumeProfileOut,
+    ResumeProvidersOut,
     ShortlistItem,
     ShortlistOut,
     SkillOut,
@@ -64,6 +66,8 @@ from jme.logging import get_logger
 from jme.report.digest import build_digest_report, digest_report_to_dict
 from jme.report.gap import build_gap_report
 from jme.report.render import gap_report_to_dict
+from jme.resume.ai import AIRewriteError, customize_with_ai, provider_catalog
+from jme.resume.pdf import PDFRenderError, compile_one_page_resume
 from jme.resume.tailor import load_profile, tailor_profile
 
 log = get_logger(__name__)
@@ -121,6 +125,11 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code=500, detail="resume profile is unavailable") from exc
         return ResumeProfileOut.model_validate(payload)
 
+    @app.get("/resume/providers", response_model=ResumeProvidersOut)
+    def resume_providers() -> ResumeProvidersOut:
+        """Report configured modes without exposing provider credentials."""
+        return ResumeProvidersOut(providers=provider_catalog())
+
     @app.post("/resume/tailor", response_model=TailoredResumeOut)
     def tailor_resume(request: TailorResumeRequest) -> TailoredResumeOut:
         """Compute a tailored view without persisting the job description or output."""
@@ -136,6 +145,45 @@ def create_app() -> FastAPI:
             company=request.company,
             url=request.url,
         )
+        if request.customization_mode != "verified":
+            try:
+                result = customize_with_ai(
+                    result,
+                    job_description=request.job_description,
+                    provider=request.customization_mode,
+                )
+            except AIRewriteError as exc:
+                log.warning(
+                    "resume_ai_fallback",
+                    provider=request.customization_mode,
+                    error=str(exc),
+                )
+                result["customization"] = {
+                    "requested_mode": request.customization_mode,
+                    "applied_mode": "verified",
+                    "provider": request.customization_mode,
+                    "model": None,
+                    "rewritten_bullets": 0,
+                    "rejected_rewrites": 0,
+                    "warning": f"AI unavailable; used verified-only tailoring. {exc}",
+                }
+        if request.render_pdf:
+            settings = get_settings()
+            try:
+                result, pdf, omitted = compile_one_page_resume(
+                    result,
+                    configured_path=settings.resume_tectonic_path,
+                    timeout_sec=settings.resume_pdf_timeout_sec,
+                )
+                result["pdf_base64"] = base64.b64encode(pdf.data).decode("ascii")
+                result["pdf_error"] = None
+                result["pdf_pages"] = pdf.pages
+                result["pdf_omitted_bullets"] = omitted
+            except PDFRenderError as exc:
+                log.warning("resume_pdf_fallback", error=str(exc))
+                result["pdf_base64"] = None
+                result["pdf_error"] = str(exc)
+                result["pdf_pages"] = None
         return TailoredResumeOut.model_validate(result)
 
     # ----------------------------------------------------------------------------------

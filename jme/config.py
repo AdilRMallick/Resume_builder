@@ -43,6 +43,22 @@ class Settings(BaseSettings):
     respect_robots: bool = Field(default=True, alias="JME_RESPECT_ROBOTS")
 
     # llm
+    openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")
+    gemini_api_key: str | None = Field(default=None, alias="GEMINI_API_KEY")
+    kimi_api_key: str | None = Field(default=None, alias="MOONSHOT_API_KEY")
+    resume_openai_model: str = Field(
+        default="gpt-5.6-terra", alias="JME_RESUME_OPENAI_MODEL"
+    )
+    resume_anthropic_model: str = Field(
+        default="claude-sonnet-5", alias="JME_RESUME_ANTHROPIC_MODEL"
+    )
+    resume_gemini_model: str = Field(
+        default="gemini-3.6-flash", alias="JME_RESUME_GEMINI_MODEL"
+    )
+    resume_kimi_model: str = Field(default="kimi-k2.6", alias="JME_RESUME_KIMI_MODEL")
+    resume_ai_timeout_sec: int = Field(default=90, alias="JME_RESUME_AI_TIMEOUT_SEC")
+    resume_tectonic_path: str | None = Field(default=None, alias="JME_TECTONIC_PATH")
+    resume_pdf_timeout_sec: int = Field(default=120, alias="JME_RESUME_PDF_TIMEOUT_SEC")
     anthropic_api_key: str | None = Field(default=None, alias="ANTHROPIC_API_KEY")
     anthropic_model: str = Field(default="claude-opus-5", alias="JME_ANTHROPIC_MODEL")
     anthropic_effort: str = Field(default="medium", alias="JME_ANTHROPIC_EFFORT")

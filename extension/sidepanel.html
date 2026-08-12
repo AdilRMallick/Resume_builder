@@ -19,7 +19,7 @@
   <main>
     <section class="intro">
       <h2>Make this job-specific.</h2>
-      <p>Pull the description from your current page or paste one below. Your data stays on this computer.</p>
+      <p>Pull the description from your current page or paste one below. AI is optional and always runs through your local backend.</p>
     </section>
 
     <section class="source-card">
@@ -43,6 +43,17 @@
         <label>Company<input id="job-company" type="text" placeholder="Company"></label>
       </div>
 
+      <label class="provider-field" for="customization-mode">Customization
+        <select id="customization-mode">
+          <option value="verified">Verified selection · no AI</option>
+          <option value="openai" disabled>AI rewrite · OpenAI (key not configured)</option>
+          <option value="anthropic" disabled>AI rewrite · Claude (key not configured)</option>
+          <option value="gemini" disabled>AI rewrite · Gemini (key not configured)</option>
+          <option value="kimi" disabled>AI rewrite · Kimi (key not configured)</option>
+        </select>
+      </label>
+      <p class="provider-note" id="provider-note">Verified mode works without an API key.</p>
+
       <button class="primary-button" id="tailor" type="button" disabled>
         <span>Build tailored resume</span><span aria-hidden="true">&#8594;</span>
       </button>
@@ -55,22 +66,23 @@
           <p class="eyebrow">Verified output</p>
           <h2>Your tailored resume</h2>
         </div>
-        <span class="truth-badge">No rewritten claims</span>
+        <span class="truth-badge" id="truth-badge">Verified selection</span>
       </div>
       <div class="match-chips" id="match-chips"></div>
       <div class="resume-frame">
+        <iframe class="resume-pdf" id="resume-pdf" title="Compiled Jake-template PDF" hidden></iframe>
         <article class="resume" id="resume" contenteditable="true" aria-label="Editable tailored resume"></article>
       </div>
-      <p class="edit-note">Click any text to make final edits. The generated version only selects and reorders verified bullets.</p>
+      <p class="edit-note" id="edit-note">Click any text to make final edits.</p>
       <div class="result-actions">
         <button id="copy" type="button">Copy text</button>
-        <button id="download" type="button">Download HTML</button>
-        <button class="action-primary" id="print" type="button">Print / Save PDF</button>
+        <button id="download" type="button">Download .tex</button>
+        <button class="action-primary" id="download-pdf" type="button" disabled>Download exact PDF</button>
       </div>
     </section>
   </main>
 
-  <footer><span class="lock" aria-hidden="true">&#9679;</span> Local-only processing through <code>127.0.0.1:8002</code></footer>
+  <footer><span class="lock" aria-hidden="true">&#9679;</span> Extension → local backend. Provider keys never enter Chrome.</footer>
   <script src="sidepanel.js"></script>
 </body>
 </html>

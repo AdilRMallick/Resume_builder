@@ -71,7 +71,7 @@
       "bullets": [
         {
           "text": "Shipped a Microsoft Teams chatbot for more than 500 enterprise users as a TypeScript Azure Function with Power Automate, ServiceNow REST APIs, and Azure API Management.",
-          "tags": ["typescript", "azure", "functions", "rest", "api", "chatbot", "servicenow", "cloud"]
+          "tags": ["typescript", "azure", "functions", "rest", "api", "chatbot", "servicenow", "cloud", "enterprise users", "user-facing product"]
         },
         {
           "text": "Debugged REST routing and validated JSON payloads with Postman, cutting chatbot query response time by 27 percent.",
@@ -90,7 +90,7 @@
       "bullets": [
         {
           "text": "Built cross-platform task-management features for a desktop productivity app published on the Mac App Store and Microsoft Store, offloading main-process work through Electron IPC to cut measured idle RAM use by 35 percent.",
-          "tags": ["react", "next.js", "typescript", "electron", "desktop", "performance", "ipc"]
+          "tags": ["react", "next.js", "typescript", "electron", "desktop", "performance", "ipc", "product", "product development", "user-facing product"]
         },
         {
           "text": "Automated email-list data workflows with Python, smtplib, and pandas.",
@@ -133,6 +133,27 @@
         {
           "text": "Added versioned evidence retrieval with pgvector embeddings, mandatory citations, deterministic ranking, gap reports, a daily digest, and Python and Go CI checks.",
           "tags": ["python", "postgresql", "pgvector", "embeddings", "ci/cd", "testing", "machine learning"]
+        }
+      ]
+    },
+    {
+      "organization": "LLM Gateway",
+      "location": "",
+      "title": "Python, FastAPI, PostgreSQL, Redis, Docker, Envoy",
+      "dates": "2026",
+      "url": "https://github.com/AdilRMallick/llm_gateway",
+      "bullets": [
+        {
+          "text": "Built an async FastAPI gateway that normalized Anthropic, OpenAI, and Google behind one API with policy-based routing, full-jitter retry and failover, Redis single-flight caching, and batched PostgreSQL cost accounting.",
+          "tags": ["python", "fastapi", "api", "anthropic", "openai", "gemini", "llm", "routing", "retries", "failover", "redis", "postgresql", "distributed systems"]
+        },
+        {
+          "text": "Reduced cached-response p50 from 127.64 milliseconds to 3.48 milliseconds, 37 times faster, and p95 from 129.61 milliseconds to 4.92 milliseconds in reproducible Docker benchmarks.",
+          "tags": ["python", "redis", "caching", "performance", "benchmarking", "docker", "testing", "backend"]
+        },
+        {
+          "text": "Demonstrated automatic three-provider recovery across injected 503 and 429 failures and reduced modeled cost by 94.1 percent on a seeded 60-request workload using cheapest routing plus caching.",
+          "tags": ["reliability", "fault injection", "failover", "testing", "cost optimization", "llm", "distributed systems", "resilience"]
         }
       ]
     },
@@ -227,16 +248,16 @@
       "bullets": [
         {
           "text": "Built the volunteer recruitment pipeline and coordinated logistics for a public food bank in the Michigan State University Union for a council that secured more than $1 million in Michigan MiLeap grant funding.",
-          "tags": ["leadership", "communication", "operations", "project management"]
+          "tags": ["leadership", "communication", "operations", "project management", "stakeholder coordination"]
         }
       ]
     }
   ],
   "skills": {
     "Languages": ["Python", "Java", "Kotlin", "C++", "Go", "JavaScript", "TypeScript", "SQL", "HTML/CSS"],
-    "Frameworks": ["FastAPI", "Spring Boot", "Flask", "React", "Next.js", "Node.js", "Express", "Electron", "PyTorch", "TensorFlow"],
-    "Cloud and DevOps": ["AWS", "Azure", "Terraform", "Docker", "Kubernetes", "Git", "GitHub Actions", "CI/CD", "Linux"],
-    "Data and Testing": ["PostgreSQL", "MongoDB", "Cosmos DB", "Redis", "Flyway", "ETL Pipelines", "REST APIs", "Postman", "Splunk", "pytest", "JUnit", "Testcontainers"]
+    "Frameworks": ["FastAPI", "Spring Boot", "Flask", "React", "Next.js", "Node.js", "Express", "Electron", "PyTorch", "TensorFlow", "SQLAlchemy"],
+    "Cloud and DevOps": ["AWS", "Azure", "Terraform", "Docker", "Kubernetes", "Envoy", "Git", "GitHub Actions", "CI/CD", "Linux"],
+    "Data and Testing": ["PostgreSQL", "MongoDB", "Cosmos DB", "Redis", "Alembic", "Flyway", "ETL Pipelines", "REST APIs", "Postman", "Splunk", "pytest", "JUnit", "Testcontainers"]
   },
   "certifications": ["CompTIA A+", "Cisco IT Essentials"]
 }

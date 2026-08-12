@@ -36,3 +36,35 @@ def test_page_capture_is_user_triggered_and_tailoring_stays_local() -> None:
     assert 'sendMessage({ type: "extract-active-job-page" })' in panel
     assert 'message.type !== "extract-active-job-page"' in worker
     assert "chrome.scripting.executeScript" in worker
+
+
+def test_resume_preview_never_renders_a_target_job_banner() -> None:
+    panel = (ROOT / "sidepanel.js").read_text(encoding="utf-8")
+    html = (ROOT / "sidepanel.html").read_text(encoding="utf-8")
+    assert "Tailored for:" not in panel
+    assert 'class="target"' not in panel
+    assert "Selected Projects" not in panel
+    assert "Download .tex" in html
+    assert "Download exact PDF" in html
+    assert 'render_pdf: true' in panel
+    assert "data.pdf_base64" in panel
+    assert "currentTailoredResume.latex" in panel
+
+
+def test_ai_provider_selection_keeps_secrets_in_the_local_backend() -> None:
+    panel = (ROOT / "sidepanel.js").read_text(encoding="utf-8")
+    html = (ROOT / "sidepanel.html").read_text(encoding="utf-8")
+    manifest = (ROOT / "manifest.json").read_text(encoding="utf-8")
+    assert 'fetch(`${API}/resume/providers`)' in panel
+    assert 'fetch(`${API}/health`)' not in panel
+    assert 'window.addEventListener("focus", checkServer)' in panel
+    assert 'customization_mode: byId("customization-mode").value' in panel
+    assert "authorization" not in panel.lower()
+    assert "x-api-key" not in panel.lower()
+    assert "sk-" not in panel
+    assert 'value="verified"' in html
+    assert 'value="openai"' in html
+    assert 'value="anthropic"' in html
+    assert 'value="gemini"' in html
+    assert 'value="kimi"' in html
+    assert '"version": "0.2.0"' in manifest

@@ -12,7 +12,7 @@ still rules out multi-user hosting, auth, and remote writes.
 from __future__ import annotations
 
 import datetime as dt
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, Literal, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -258,6 +258,8 @@ class ResumeContactOut(BaseModel):
 class ResumeBulletOut(BaseModel):
     text: str
     tags: list[str] = Field(default_factory=list)
+    source_text: str | None = None
+    ai_rewritten: bool = False
 
 
 class ResumeEntryOut(BaseModel):
@@ -286,6 +288,10 @@ class TailorResumeRequest(BaseModel):
     title: str = Field(default="", max_length=512)
     company: str = Field(default="", max_length=512)
     url: str = Field(default="", max_length=4096)
+    render_pdf: bool = False
+    customization_mode: Literal[
+        "verified", "openai", "anthropic", "gemini", "kimi"
+    ] = "verified"
 
 
 class ResumeTargetOut(BaseModel):
@@ -294,10 +300,41 @@ class ResumeTargetOut(BaseModel):
     url: str = ""
 
 
+class ResumeCustomizationOut(BaseModel):
+    requested_mode: Literal[
+        "verified", "openai", "anthropic", "gemini", "kimi"
+    ] = "verified"
+    applied_mode: Literal["verified", "ai"] = "verified"
+    provider: Literal["openai", "anthropic", "gemini", "kimi"] | None = None
+    model: str | None = None
+    rewritten_bullets: int = 0
+    rejected_rewrites: int = 0
+    warning: str | None = None
+
+
+class ResumeProviderOut(BaseModel):
+    id: Literal["verified", "openai", "anthropic", "gemini", "kimi"]
+    label: str
+    available: bool
+    model: str | None = None
+
+
+class ResumeProvidersOut(BaseModel):
+    providers: list[ResumeProviderOut]
+
+
 class TailoredResumeOut(ResumeProfileOut):
+    template_id: str
+    role_focus: str
     target: ResumeTargetOut
     matched_skills: list[str] = Field(default_factory=list)
+    customization: ResumeCustomizationOut
     source_rule: str
+    latex: str
+    pdf_base64: str | None = None
+    pdf_error: str | None = None
+    pdf_pages: int | None = None
+    pdf_omitted_bullets: int = 0
 
 
 # --------------------------------------------------------------------------------------

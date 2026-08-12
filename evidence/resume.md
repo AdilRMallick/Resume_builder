@@ -34,6 +34,14 @@ Detroit, Michigan — May 2025 to August 2025.
 - Reduced measured idle memory use by 35 percent by redesigning Electron inter-process communication.
 - Automated email-list workflows with Python, `smtplib`, and pandas.
 
+## LLM Gateway — Backend and Platform Project
+
+2026.
+
+- Built an asynchronous FastAPI gateway that normalized Anthropic, OpenAI, and Google behind one API with policy-based routing, full-jitter retry and failover, Redis single-flight caching, and batched PostgreSQL cost accounting.
+- Reduced cached-response p50 from 127.64 milliseconds to 3.48 milliseconds, 37 times faster, and p95 from 129.61 milliseconds to 4.92 milliseconds in reproducible Docker benchmarks.
+- Demonstrated automatic three-provider recovery across injected 503 and 429 failures and reduced modeled cost by 94.1 percent on a seeded 60-request workload using cheapest routing plus caching.
+
 ## Education
 
 - Michigan State University — Bachelor of Science in Computer Science, minor in Business, expected May 2027.
