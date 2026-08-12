@@ -53,6 +53,8 @@ def test_ai_provider_selection_keeps_secrets_in_the_local_backend() -> None:
     html = (ROOT / "sidepanel.html").read_text(encoding="utf-8")
     manifest = (ROOT / "manifest.json").read_text(encoding="utf-8")
     assert 'fetch(`${API}/resume/providers`)' in panel
+    assert 'fetch(`${API}/health`)' not in panel
+    assert 'window.addEventListener("focus", checkServer)' in panel
     assert 'customization_mode: byId("customization-mode").value' in panel
     assert "authorization" not in panel.lower()
     assert "x-api-key" not in panel.lower()
@@ -62,4 +64,4 @@ def test_ai_provider_selection_keeps_secrets_in_the_local_backend() -> None:
     assert 'value="anthropic"' in html
     assert 'value="gemini"' in html
     assert 'value="kimi"' in html
-    assert '"version": "0.1.3"' in manifest
+    assert '"version": "0.1.4"' in manifest

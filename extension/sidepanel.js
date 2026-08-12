@@ -23,45 +23,39 @@ function setStatus(message, error = false) {
 
 async function checkServer() {
   try {
-    const response = await fetch(`${API}/health`);
-    if (!response.ok) throw new Error(String(response.status));
-    const health = await response.json();
-    serverReady = health.status === "ok";
-    byId("server-state").className = "server-state ok";
-    byId("server-state").lastElementChild.textContent = `Ready / evidence v${health.evidence_version}`;
-    setStatus("Connected. Open a job page or paste a description.");
     await loadProviders();
+    serverReady = true;
+    byId("server-state").className = "server-state ok";
+    byId("server-state").lastElementChild.textContent = "Ready / resume tailor";
+    setStatus("Connected. Open a job page or paste a description.");
   } catch (_error) {
     serverReady = false;
     byId("server-state").className = "server-state bad";
     byId("server-state").lastElementChild.textContent = "Offline";
+    byId("provider-note").textContent = "Provider status unavailable; verified mode remains ready.";
     setStatus("Start JME locally on port 8002, then reopen this panel.", true);
   }
   updateCount();
 }
 
 async function loadProviders() {
-  try {
-    const response = await fetch(`${API}/resume/providers`);
-    if (!response.ok) throw new Error(String(response.status));
-    const data = await response.json();
-    for (const provider of data.providers) {
-      const option = byId("customization-mode").querySelector(`option[value="${provider.id}"]`);
-      if (!option) continue;
-      option.disabled = !provider.available;
-      option.textContent = provider.available
-        ? `${provider.label}${provider.model ? ` · ${provider.model}` : ""}`
-        : `${provider.label} (key not configured)`;
-    }
-    const availableAI = data.providers.filter(
-      (provider) => provider.id !== "verified" && provider.available
-    );
-    byId("provider-note").textContent = availableAI.length
-      ? "AI sends this job description and selected verified bullets to the chosen provider."
-      : "Add an OpenAI, Anthropic, Gemini, or Moonshot key to .env, then restart JME.";
-  } catch (_error) {
-    byId("provider-note").textContent = "Provider status unavailable; verified mode remains ready.";
+  const response = await fetch(`${API}/resume/providers`);
+  if (!response.ok) throw new Error(String(response.status));
+  const data = await response.json();
+  for (const provider of data.providers) {
+    const option = byId("customization-mode").querySelector(`option[value="${provider.id}"]`);
+    if (!option) continue;
+    option.disabled = !provider.available;
+    option.textContent = provider.available
+      ? `${provider.label}${provider.model ? ` · ${provider.model}` : ""}`
+      : `${provider.label} (key not configured)`;
   }
+  const availableAI = data.providers.filter(
+    (provider) => provider.id !== "verified" && provider.available
+  );
+  byId("provider-note").textContent = availableAI.length
+    ? "AI sends this job description and selected verified bullets to the chosen provider."
+    : "Add an OpenAI, Anthropic, Gemini, or Moonshot key to .env, then restart JME.";
 }
 
 function renderEntry(entry) {
@@ -193,4 +187,8 @@ byId("download").addEventListener("click", () => {
 
 byId("print").addEventListener("click", () => window.print());
 
+window.addEventListener("focus", checkServer);
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) checkServer();
+});
 checkServer();
