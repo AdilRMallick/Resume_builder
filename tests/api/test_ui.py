@@ -88,7 +88,10 @@ DASHBOARD_FIELDS = {
     ResumeContactOut: ["label", "value", "url"],
     ResumeEntryOut: ["organization", "location", "title", "dates", "url", "bullets"],
     ResumeBulletOut: ["text", "tags"],
-    TailoredResumeOut: ["template_id", "role_focus", "target", "matched_skills", "source_rule", "latex"],
+    TailoredResumeOut: [
+        "template_id", "role_focus", "target", "matched_skills", "source_rule",
+        "latex", "pdf_base64", "pdf_error", "pdf_omitted_bullets",
+    ],
     QueueStatus: ["streams"],
     StreamStatus: [
         "stream", "group", "depth", "pending", "consumers", "oldest_pending_age_sec",
@@ -136,6 +139,8 @@ def test_resume_studio_never_renders_a_target_job_banner() -> None:
     assert "resume-target" not in html
     assert "Selected Projects" not in html
     assert "latestTailoredResume.latex" in html
+    assert "tailored.pdf_base64" in html
+    assert "render_pdf: true" in html
 
 
 def test_dashboard_reports_a_missing_asset_instead_of_a_blank_500(client, monkeypatch) -> None:

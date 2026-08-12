@@ -18,6 +18,7 @@ a plain function and not a module-level global.
 
 from __future__ import annotations
 
+import base64
 import datetime as dt
 import json
 from collections.abc import Iterator
@@ -66,6 +67,7 @@ from jme.report.digest import build_digest_report, digest_report_to_dict
 from jme.report.gap import build_gap_report
 from jme.report.render import gap_report_to_dict
 from jme.resume.ai import AIRewriteError, customize_with_ai, provider_catalog
+from jme.resume.pdf import PDFRenderError, compile_one_page_resume
 from jme.resume.tailor import load_profile, tailor_profile
 
 log = get_logger(__name__)
@@ -165,6 +167,23 @@ def create_app() -> FastAPI:
                     "rejected_rewrites": 0,
                     "warning": f"AI unavailable; used verified-only tailoring. {exc}",
                 }
+        if request.render_pdf:
+            settings = get_settings()
+            try:
+                result, pdf, omitted = compile_one_page_resume(
+                    result,
+                    configured_path=settings.resume_tectonic_path,
+                    timeout_sec=settings.resume_pdf_timeout_sec,
+                )
+                result["pdf_base64"] = base64.b64encode(pdf.data).decode("ascii")
+                result["pdf_error"] = None
+                result["pdf_pages"] = pdf.pages
+                result["pdf_omitted_bullets"] = omitted
+            except PDFRenderError as exc:
+                log.warning("resume_pdf_fallback", error=str(exc))
+                result["pdf_base64"] = None
+                result["pdf_error"] = str(exc)
+                result["pdf_pages"] = None
         return TailoredResumeOut.model_validate(result)
 
     # ----------------------------------------------------------------------------------

@@ -288,6 +288,7 @@ class TailorResumeRequest(BaseModel):
     title: str = Field(default="", max_length=512)
     company: str = Field(default="", max_length=512)
     url: str = Field(default="", max_length=4096)
+    render_pdf: bool = False
     customization_mode: Literal[
         "verified", "openai", "anthropic", "gemini", "kimi"
     ] = "verified"
@@ -330,6 +331,10 @@ class TailoredResumeOut(ResumeProfileOut):
     customization: ResumeCustomizationOut
     source_rule: str
     latex: str
+    pdf_base64: str | None = None
+    pdf_error: str | None = None
+    pdf_pages: int | None = None
+    pdf_omitted_bullets: int = 0
 
 
 # --------------------------------------------------------------------------------------

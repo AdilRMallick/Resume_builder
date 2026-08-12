@@ -78,6 +78,20 @@ def test_cloud_tailoring_puts_verified_cloud_keywords_first() -> None:
     ]
 
 
+def test_llm_gateway_is_available_as_verified_backend_evidence() -> None:
+    result = tailor_profile(
+        load_profile(),
+        title="LLM Platform Engineer",
+        job_description=(
+            "Build a Python FastAPI LLM gateway with OpenAI Anthropic Gemini routing, "
+            "Redis caching, PostgreSQL accounting, retries, failover, and benchmarking. " * 4
+        ),
+    )
+    assert result["projects"][0]["organization"] == "LLM Gateway"
+    assert result["projects"][0]["url"] == "https://github.com/AdilRMallick/llm_gateway"
+    assert all(bullet["tags"] for bullet in result["projects"][0]["bullets"])
+
+
 def test_jake_latex_has_canonical_sections_and_never_renders_target_job() -> None:
     result = tailor_profile(
         load_profile(),
@@ -91,6 +105,16 @@ def test_jake_latex_has_canonical_sections_and_never_renders_target_job() -> Non
     assert "Tailored for" not in latex
     assert "\\pdfgentounicode=1" in latex
     assert "\\documentclass[letterpaper,11pt]{article}" in latex
+    assert "\\addtolength{\\oddsidemargin}{-0.5in}" in latex
+    assert "\\addtolength{\\textwidth}{1in}" in latex
+    assert "\\addtolength{\\topmargin}{-.5in}" in latex
+    assert "\\addtolength{\\textheight}{1.0in}" in latex
+    assert "\\textbf{\\Huge \\scshape Adil R. Mallick}" in latex
+    assert (
+        "\\resumeSubheading\n"
+        "      {Software Engineer Intern, ML Operations}{Jun. 2026 - Aug. 2026}\n"
+        "      {HERE Technologies}{Chicago, IL}"
+    ) in latex
     positions = [
         latex.index(f"\\section{{{section}}}")
         for section in load_rules()["section_order"]

@@ -21,6 +21,16 @@ To enable an AI option, add `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_K
 `MOONSHOT_API_KEY` (Kimi) to the repository's `.env` file before starting the
 application. Without a key, **Verified selection** remains fully usable.
 
+For exact Jake-template PDF preview and download, install the local LaTeX engine once
+from the repository root:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\install-tectonic.ps1
+```
+
+Restart JME afterward. Compilation happens locally; the extension never sends resume
+data to an online LaTeX service.
+
 Use **Use current job page** for a normal listing, or paste/upload a `.txt`, `.md`, or
-`.html` job description. The result is editable in the panel and can be copied,
-downloaded as canonical Jake-template LaTeX, or printed to PDF.
+`.html` job description. The result can be copied, downloaded as canonical Jake-template
+LaTeX, or downloaded as the actual locally compiled PDF.

@@ -32,6 +32,7 @@ Open PowerShell in the repository folder and run:
 py -3.11 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install --upgrade pip
 .\.venv\Scripts\python.exe -m pip install -e .
+powershell -ExecutionPolicy Bypass -File .\scripts\install-tectonic.ps1
 if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 .\.venv\Scripts\jme.exe serve start --port 8002
 ```
@@ -40,7 +41,9 @@ Keep that PowerShell window open. When it says Uvicorn is running, the backend i
 ready at <http://127.0.0.1:8002>.
 
 The setup command creates `.env` only when it is missing, so rerunning it will not erase
-any API keys you added.
+any API keys you added. Tectonic is the local LaTeX engine: its first PDF compile downloads
+the TeX support bundle, then later compiles use the cache. Resume data is not uploaded to
+an online LaTeX service.
 
 ### 2. Load the extension once
 
@@ -57,8 +60,7 @@ any API keys you added.
 3. Click **Use current job page**, or paste/upload the job description.
 4. Leave **Verified selection** selected, or choose a configured AI provider.
 5. Click **Build tailored resume**.
-6. Edit the result if needed, then copy it, download Jake-template LaTeX, or print it
-   to PDF.
+6. Review the real compiled PDF, then copy its text or download the `.tex` or `.pdf` file.
 
 Verified mode works immediately and never calls an AI provider. To enable AI rewriting,
 open `.env`, add exactly one key, save the file, stop the server with `Ctrl+C`, and run
@@ -86,6 +88,7 @@ extension code changes, click its **Reload** button on `chrome://extensions`.
 python3 -m venv .venv
 ./.venv/bin/python -m pip install --upgrade pip
 ./.venv/bin/python -m pip install -e .
+# Install Tectonic from https://tectonic-typesetting.github.io/book/latest/installation/
 [ -f .env ] || cp .env.example .env
 ./.venv/bin/jme serve start --port 8002
 ```
@@ -210,8 +213,8 @@ is open, click **Use current job page** to capture its visible description, or p
 upload a text/Markdown/HTML description. The local API always selects relevant verified
 bullets from `jme/resume/profile.json`. You can keep that deterministic wording or ask
 OpenAI, Claude, Gemini, or Kimi to propose evidence-linked rewrites; numeric, keyword, source, and target-
-banner checks run before any rewrite is accepted. The result remains an editable Jake-
-template resume with copy, LaTeX download, and browser print-to-PDF.
+banner checks run before any rewrite is accepted. The result uses Jake's canonical LaTeX
+layout and is compiled locally into the PDF shown in the extension.
 
 AI is optional. Put one provider key in `.env` and restart the API:
 

@@ -48,13 +48,21 @@ def _bullet_list(entry: dict[str, Any]) -> str:
     )
 
 
-def _subheading(entry: dict[str, Any]) -> str:
+def _subheading(entry: dict[str, Any], *, education: bool = False) -> str:
+    if education:
+        primary_left = entry["organization"]
+        primary_right = entry.get("location", "")
+        secondary_left = entry["title"]
+        secondary_right = entry["dates"]
+    else:
+        primary_left = entry["title"]
+        primary_right = entry["dates"]
+        secondary_left = entry["organization"]
+        secondary_right = entry.get("location", "")
     return (
         "    \\resumeSubheading\n"
-        f"      {{{escape_latex(entry['organization'])}}}"
-        f"{{{escape_latex(entry.get('location', ''))}}}\n"
-        f"      {{{escape_latex(entry['title'])}}}"
-        f"{{{escape_latex(entry['dates'])}}}\n"
+        f"      {{{escape_latex(primary_left)}}}{{{escape_latex(primary_right)}}}\n"
+        f"      {{{escape_latex(secondary_left)}}}{{{escape_latex(secondary_right)}}}\n"
         f"{_bullet_list(entry)}"
     )
 
@@ -72,8 +80,12 @@ def _project_heading(entry: dict[str, Any]) -> str:
 
 
 def _section(name: str, entries: list[dict[str, Any]], *, projects: bool = False) -> str:
-    renderer = _project_heading if projects else _subheading
-    body = "\n".join(renderer(entry) for entry in entries)
+    if projects:
+        body = "\n".join(_project_heading(entry) for entry in entries)
+    else:
+        body = "\n".join(
+            _subheading(entry, education=name == "Education") for entry in entries
+        )
     return (
         f"%-----------{name.upper().replace(' ', '-')}-----------\n"
         f"\\section{{{name}}}\n"
@@ -92,7 +104,7 @@ def _skills(data: dict[str, Any]) -> str:
         lines.append(
             rf"     \textbf{{Certifications}}{{: {escape_latex(', '.join(data['certifications']))}}} \\"
         )
-    return "\n".join(lines)
+    return "\n".join(lines).removesuffix(r" \\")
 
 
 def render_jake_latex(data: dict[str, Any]) -> str:
@@ -108,7 +120,9 @@ def render_jake_latex(data: dict[str, Any]) -> str:
     skills = _skills(data)
     return rf"""%-------------------------
 % Resume in LaTeX
-% Template: Jake Gutierrez (MIT License)
+% Author: Jake Gutierrez
+% Based off of: https://github.com/sb2nov/resume
+% License: MIT
 % Tailoring policy: verified bullet selection and ordering only
 %------------------------
 \documentclass[letterpaper,11pt]{{article}}
@@ -124,7 +138,10 @@ def render_jake_latex(data: dict[str, Any]) -> str:
 \usepackage{{fancyhdr}}
 \usepackage[english]{{babel}}
 \usepackage{{tabularx}}
-\input{{glyphtounicode}}
+\ifdefined\pdfgentounicode
+  \input{{glyphtounicode}}
+  \pdfgentounicode=1
+\fi
 
 \pagestyle{{fancy}}
 \fancyhf{{}}
@@ -132,11 +149,11 @@ def render_jake_latex(data: dict[str, Any]) -> str:
 \renewcommand{{\headrulewidth}}{{0pt}}
 \renewcommand{{\footrulewidth}}{{0pt}}
 
-\addtolength{{\oddsidemargin}}{{-0.6in}}
+\addtolength{{\oddsidemargin}}{{-0.5in}}
 \addtolength{{\evensidemargin}}{{-0.5in}}
-\addtolength{{\textwidth}}{{1.19in}}
-\addtolength{{\topmargin}}{{-.8in}}
-\addtolength{{\textheight}}{{1.5in}}
+\addtolength{{\textwidth}}{{1in}}
+\addtolength{{\topmargin}}{{-.5in}}
+\addtolength{{\textheight}}{{1.0in}}
 
 \urlstyle{{same}}
 \raggedbottom
@@ -144,17 +161,25 @@ def render_jake_latex(data: dict[str, Any]) -> str:
 \setlength{{\tabcolsep}}{{0in}}
 
 \titleformat{{\section}}{{
-  \vspace{{-6pt}}\scshape\raggedright\large
-}}{{}}{{0em}}{{}}[\color{{black}}\titlerule \vspace{{-7pt}}]
+  \vspace{{-4pt}}\scshape\raggedright\large
+}}{{}}{{0em}}{{}}[\color{{black}}\titlerule \vspace{{-5pt}}]
 
-\pdfgentounicode=1
-
-\newcommand{{\resumeItem}}[1]{{\item\small{{#1}}\vspace{{-4pt}}}}
+\newcommand{{\resumeItem}}[1]{{
+  \item\small{{
+    {{#1 \vspace{{-2pt}}}}
+  }}
+}}
 \newcommand{{\resumeSubheading}}[4]{{
   \vspace{{-2pt}}\item
     \begin{{tabular*}}{{0.97\textwidth}}[t]{{l@{{\extracolsep{{\fill}}}}r}}
       \textbf{{#1}} & #2 \\
       \textit{{\small#3}} & \textit{{\small #4}} \\
+    \end{{tabular*}}\vspace{{-7pt}}
+}}
+\newcommand{{\resumeSubSubheading}}[2]{{
+  \item
+    \begin{{tabular*}}{{0.97\textwidth}}{{l@{{\extracolsep{{\fill}}}}r}}
+      \textit{{\small#1}} & \textit{{\small #2}} \\
     \end{{tabular*}}\vspace{{-7pt}}
 }}
 \newcommand{{\resumeProjectHeading}}[2]{{
@@ -163,6 +188,7 @@ def render_jake_latex(data: dict[str, Any]) -> str:
       \small#1 & #2 \\
     \end{{tabular*}}\vspace{{-7pt}}
 }}
+\newcommand{{\resumeSubItem}}[1]{{\resumeItem{{#1}}\vspace{{-4pt}}}}
 \renewcommand\labelitemii{{$\vcenter{{\hbox{{\tiny$\bullet$}}}}$}}
 \newcommand{{\resumeSubHeadingListStart}}{{\begin{{itemize}}[leftmargin=0.15in, label={{}}]}}
 \newcommand{{\resumeSubHeadingListEnd}}{{\end{{itemize}}}}
@@ -172,7 +198,7 @@ def render_jake_latex(data: dict[str, Any]) -> str:
 \begin{{document}}
 
 \begin{{center}}
-    \textbf{{\LARGE \scshape {escape_latex(data['name'])}}} \\ \vspace{{2pt}}
+    \textbf{{\Huge \scshape {escape_latex(data['name'])}}} \\ \vspace{{1pt}}
     \small {_contact_line(data['contact'])}
 \end{{center}}
 

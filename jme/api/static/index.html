@@ -269,6 +269,7 @@
     font-size: 10px;
     line-height: 1.35;
   }
+  .resume-pdf-frame { display: block; width: min(100%, 820px); height: 1030px; margin: 0 auto; border: 0; background: #fff; box-shadow: 0 18px 48px rgba(28, 39, 68, 0.13); }
   .resume-sheet:focus { outline: 3px solid var(--accent); outline-offset: 3px; }
   .resume-name { margin: 0; text-align: center; color: #10131a; font-size: 24px; line-height: 1; letter-spacing: 0.04em; text-transform: uppercase; }
   .resume-contact { margin-bottom: 13px; text-align: center; color: #333947; font-size: 8px; }
@@ -439,7 +440,7 @@
         <div class="studio-actions">
           <button id="copy-resume" type="button" disabled>Copy text</button>
           <button id="download-tex" type="button" disabled>Download .tex</button>
-          <button id="print-resume" type="button" disabled>Print / PDF</button>
+          <button id="download-pdf" type="button" disabled>Download PDF</button>
         </div>
       </aside>
       <div class="studio-workspace" id="resume-preview">
@@ -495,6 +496,7 @@ const text = (value) => (value === null || value === undefined || value === "" ?
 let resumeProfile = null;
 let shortlistItems = [];
 let latestTailoredResume = null;
+let latestResumePdfUrl = "";
 
 function table(columns, rows) {
   if (!rows.length) return '<p class="empty">Nothing to show yet.</p>';
@@ -618,20 +620,25 @@ function entryScore(entry, context) {
   return (entry.bullets || []).reduce((score, bullet) => score + bulletScore(bullet, context), 0);
 }
 
-function resumeEntry(entry, context) {
+function resumeEntry(entry, context, sectionTitle) {
   const organization = entry.url
     ? `<a href="${escapeHTML(entry.url)}" target="_blank" rel="noreferrer">${escapeHTML(entry.organization)}</a>`
     : escapeHTML(entry.organization);
   const bullets = orderedBullets(entry, context).map((bullet) => `<li>${escapeHTML(bullet.text)}</li>`).join("");
+  const employment = sectionTitle === "Experience" || sectionTitle === "Leadership";
+  const primaryLeft = employment ? escapeHTML(entry.title) : organization;
+  const primaryRight = employment ? escapeHTML(entry.dates) : escapeHTML(entry.location || entry.dates);
+  const secondaryLeft = employment ? organization : escapeHTML(entry.title);
+  const secondaryRight = employment ? escapeHTML(entry.location) : (entry.location ? escapeHTML(entry.dates) : "");
   return `<article class="resume-entry">
-    <div class="resume-entry-head"><span class="resume-entry-title">${organization}</span><span>${escapeHTML(entry.location || entry.dates)}</span></div>
-    <div class="resume-entry-sub"><span>${escapeHTML(entry.title)}</span><span>${entry.location ? escapeHTML(entry.dates) : ""}</span></div>
+    <div class="resume-entry-head"><span class="resume-entry-title">${primaryLeft}</span><span>${primaryRight}</span></div>
+    <div class="resume-entry-sub"><span>${secondaryLeft}</span><span>${secondaryRight}</span></div>
     ${bullets ? `<ul>${bullets}</ul>` : ""}
   </article>`;
 }
 
 function resumeSection(title, entries, context) {
-  return `<section class="resume-section"><h3 class="resume-section-title">${escapeHTML(title)}</h3>${entries.map((entry) => resumeEntry(entry, context)).join("")}</section>`;
+  return `<section class="resume-section"><h3 class="resume-section-title">${escapeHTML(title)}</h3>${entries.map((entry) => resumeEntry(entry, context, title)).join("")}</section>`;
 }
 
 function orderedSkills(skills, context) {
@@ -665,6 +672,7 @@ async function tailorResume() {
         title: posting.title,
         company: posting.company,
         url: posting.url,
+        render_pdf: true,
       }),
     });
     if (!tailorResponse.ok) throw new Error(`${tailorResponse.status} ${tailorResponse.statusText}`);
@@ -678,7 +686,16 @@ async function tailorResume() {
     const chips = matchedSkills.length
       ? `<div class="match-strip">${matchedSkills.map((skill) => `<span class="match-chip">${escapeHTML(skill)}</span>`).join("")}</div>`
       : '<div class="match-strip"><span class="match-chip">Title-based ordering</span></div>';
-    el("resume-preview").innerHTML = `${chips}<article class="resume-sheet" contenteditable="true" aria-label="Editable tailored resume">
+    if (latestResumePdfUrl) URL.revokeObjectURL(latestResumePdfUrl);
+    latestResumePdfUrl = "";
+    let pdfPreview = "";
+    if (tailored.pdf_base64) {
+      const binary = atob(tailored.pdf_base64);
+      const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+      latestResumePdfUrl = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
+      pdfPreview = `<iframe class="resume-pdf-frame" src="${latestResumePdfUrl}" title="Compiled Jake-template PDF"></iframe>`;
+    }
+    el("resume-preview").innerHTML = `${chips}${pdfPreview}<article class="resume-sheet" ${pdfPreview ? "hidden" : ""} aria-label="Tailored resume text">
       <h2 class="resume-name">${escapeHTML(tailored.name)}</h2>
       <div class="resume-contact">${contacts}</div>
       ${resumeSection("Education", tailored.education, context)}
@@ -687,12 +704,15 @@ async function tailorResume() {
       ${resumeSection("Leadership", tailored.leadership, context)}
       <section class="resume-section"><h3 class="resume-section-title">Technical Skills</h3><div class="resume-skills">${orderedSkills(tailored.skills, context)}<div><strong>Certifications:</strong> ${tailored.certifications.map(escapeHTML).join(", ")}</div></div></section>
     </article>`;
-    el("studio-status").textContent = requirements.length
-      ? `Prioritized against ${requirements.length} extracted requirements using the shared tailoring engine. Click any text to edit.`
-      : "No extracted requirements were available, so projects were prioritized from the job title.";
+    const fitNote = tailored.pdf_omitted_bullets
+      ? ` ${tailored.pdf_omitted_bullets} lower-priority bullets were omitted to preserve one canonical page.`
+      : "";
+    el("studio-status").textContent = tailored.pdf_error
+      ? `LaTeX preview unavailable: ${tailored.pdf_error}`
+      : `Prioritized against ${requirements.length} extracted requirements and compiled locally with Jake's LaTeX template.${fitNote}`;
     el("copy-resume").disabled = false;
     el("download-tex").disabled = false;
-    el("print-resume").disabled = false;
+    el("download-pdf").disabled = !latestResumePdfUrl;
   } catch (error) {
     el("studio-status").textContent = `Could not build resume: ${error.message}`;
   } finally {
@@ -760,7 +780,7 @@ el("resume-role").addEventListener("change", () => {
 el("copy-resume").addEventListener("click", async () => {
   const sheet = document.querySelector(".resume-sheet");
   if (!sheet) return;
-  await navigator.clipboard.writeText(sheet.innerText);
+  await navigator.clipboard.writeText(sheet.innerText || sheet.textContent);
   el("studio-status").textContent = "Resume text copied to clipboard.";
 });
 el("download-tex").addEventListener("click", () => {
@@ -773,7 +793,14 @@ el("download-tex").addEventListener("click", () => {
   URL.revokeObjectURL(href);
   el("studio-status").textContent = "Jake-template LaTeX downloaded.";
 });
-el("print-resume").addEventListener("click", () => window.print());
+el("download-pdf").addEventListener("click", () => {
+  if (!latestResumePdfUrl) return;
+  const anchor = document.createElement("a");
+  anchor.href = latestResumePdfUrl;
+  anchor.download = "Adil_Mallick_Tailored_Resume.pdf";
+  anchor.click();
+  el("studio-status").textContent = "Locally compiled Jake-template PDF downloaded.";
+});
 refresh();
 </script>
 </body>

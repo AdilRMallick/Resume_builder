@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import base64
+
 import pytest
 
 from .conftest import EVIDENCE_VERSION, LATEST_RUN, OLDER_RUN
@@ -76,6 +78,32 @@ def test_resume_tailor_is_stateless_and_never_rewrites_bullets(client) -> None:
 def test_resume_tailor_rejects_an_empty_job_description(client) -> None:
     response = client.post("/resume/tailor", json={"job_description": "too short"})
     assert response.status_code == 422
+
+
+def test_resume_tailor_can_return_a_locally_compiled_pdf(client, monkeypatch) -> None:
+    from jme.resume.pdf import CompiledPDF
+
+    monkeypatch.setattr(
+        "jme.api.app.compile_one_page_resume",
+        lambda result, **kwargs: (
+            result,
+            CompiledPDF(b"%PDF-1.7\ncompiled with LaTeX", 1),
+            2,
+        ),
+    )
+    response = client.post(
+        "/resume/tailor",
+        json={
+            "render_pdf": True,
+            "job_description": "Python FastAPI PostgreSQL Redis Docker REST API AWS " * 8,
+        },
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert base64.b64decode(body["pdf_base64"]).startswith(b"%PDF-1.7")
+    assert body["pdf_error"] is None
+    assert body["pdf_pages"] == 1
+    assert body["pdf_omitted_bullets"] == 2
 
 
 def test_resume_provider_status_never_exposes_keys(client, monkeypatch) -> None:

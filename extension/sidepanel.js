@@ -9,6 +9,7 @@ const escapeHTML = (value) => String(value ?? "").replace(/[&<>"']/g, (character
 let currentUrl = "";
 let serverReady = false;
 let currentTailoredResume = null;
+let currentPdfUrl = "";
 
 function updateCount() {
   const length = byId("job-description").value.length;
@@ -58,13 +59,18 @@ async function loadProviders() {
     : "Add an OpenAI, Anthropic, Gemini, or Moonshot key to .env, then restart JME.";
 }
 
-function renderEntry(entry) {
+function renderEntry(entry, sectionTitle) {
   const organization = entry.url
     ? `<a href="${escapeHTML(entry.url)}">${escapeHTML(entry.organization)}</a>`
     : escapeHTML(entry.organization);
+  const employment = sectionTitle === "Experience" || sectionTitle === "Leadership";
+  const primaryLeft = employment ? escapeHTML(entry.title) : organization;
+  const primaryRight = employment ? escapeHTML(entry.dates) : escapeHTML(entry.location || entry.dates);
+  const secondaryLeft = employment ? organization : escapeHTML(entry.title);
+  const secondaryRight = employment ? escapeHTML(entry.location) : (entry.location ? escapeHTML(entry.dates) : "");
   return `<div class="entry">
-    <div class="entry-head"><span>${organization}</span><span>${escapeHTML(entry.location || entry.dates)}</span></div>
-    <div class="entry-sub"><span>${escapeHTML(entry.title)}</span><span>${entry.location ? escapeHTML(entry.dates) : ""}</span></div>
+    <div class="entry-head"><span>${primaryLeft}</span><span>${primaryRight}</span></div>
+    <div class="entry-sub"><span>${secondaryLeft}</span><span>${secondaryRight}</span></div>
     <ul>${entry.bullets.map((bullet) => {
       const className = bullet.ai_rewritten ? "ai-rewritten" : "";
       const original = bullet.source_text
@@ -76,7 +82,7 @@ function renderEntry(entry) {
 }
 
 function renderSection(title, entries) {
-  return `<section><h3>${escapeHTML(title)}</h3>${entries.map(renderEntry).join("")}</section>`;
+  return `<section><h3>${escapeHTML(title)}</h3>${entries.map((entry) => renderEntry(entry, title)).join("")}</section>`;
 }
 
 function renderResume(data) {
@@ -99,12 +105,37 @@ function renderResume(data) {
     ${renderSection("Leadership", data.leadership)}
     <section><h3>Technical Skills</h3><div class="skills">${skills}<div><strong>Certifications:</strong> ${data.certifications.map(escapeHTML).join(", ")}</div></div></section>`;
   const customization = data.customization;
+  const evidenceNote = customization.applied_mode === "ai"
+    ? "AI rewrites remain tied to verified evidence."
+    : "No bullet wording was changed; evidence was selected and reordered only.";
+  const layoutNote = data.pdf_omitted_bullets
+    ? `${data.pdf_omitted_bullets} lower-priority bullet${data.pdf_omitted_bullets === 1 ? " was" : "s were"} omitted to keep the canonical layout to one page.`
+    : "The canonical layout fits on one page without further omissions.";
   if (customization.applied_mode === "ai") {
     byId("truth-badge").textContent = `${customization.rewritten_bullets} AI rewrites`;
-    byId("edit-note").textContent = "Blue-marked bullets were rewritten from verified evidence. Hover to see the original and review before using.";
   } else {
     byId("truth-badge").textContent = "Verified selection";
-    byId("edit-note").textContent = "No bullet wording was changed; evidence was selected and reordered only.";
+  }
+  if (currentPdfUrl) URL.revokeObjectURL(currentPdfUrl);
+  currentPdfUrl = "";
+  const pdfFrame = byId("resume-pdf");
+  const textPreview = byId("resume");
+  const pdfButton = byId("download-pdf");
+  if (data.pdf_base64) {
+    const binary = atob(data.pdf_base64);
+    const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
+    currentPdfUrl = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
+    pdfFrame.src = currentPdfUrl;
+    pdfFrame.hidden = false;
+    textPreview.hidden = true;
+    pdfButton.disabled = false;
+    byId("edit-note").textContent = `This is the actual locally compiled Jake-template PDF. ${layoutNote} ${evidenceNote} Download .tex for source edits.`;
+  } else {
+    pdfFrame.removeAttribute("src");
+    pdfFrame.hidden = true;
+    textPreview.hidden = false;
+    pdfButton.disabled = true;
+    byId("edit-note").textContent = `${evidenceNote} ${data.pdf_error || "The LaTeX PDF preview is unavailable."}`;
   }
   byId("result").hidden = false;
   byId("result").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -140,7 +171,7 @@ byId("tailor").addEventListener("click", async () => {
   const button = byId("tailor");
   button.disabled = true;
   button.firstElementChild.textContent = "Tailoring...";
-  setStatus("Selecting the strongest verified evidence...");
+  setStatus("Selecting evidence and compiling the Jake-template PDF...");
   try {
     const response = await fetch(`${API}/resume/tailor`, {
       method: "POST",
@@ -150,6 +181,7 @@ byId("tailor").addEventListener("click", async () => {
         title: byId("job-title").value,
         company: byId("job-company").value,
         url: currentUrl,
+        render_pdf: true,
         customization_mode: byId("customization-mode").value,
       }),
     });
@@ -160,7 +192,8 @@ byId("tailor").addEventListener("click", async () => {
     const message = customization.applied_mode === "ai"
       ? `${customization.rewritten_bullets} evidence-grounded bullets rewritten by ${customization.provider}. ${customization.rejected_rewrites} rejected by validation.`
       : `${data.matched_skills.length} relevant evidence signals found. No bullet was rewritten.`;
-    setStatus(customization.warning ? `${message} ${customization.warning}` : message);
+    const warning = [customization.warning, data.pdf_error].filter(Boolean).join(" ");
+    setStatus(warning ? `${message} ${warning}` : message);
   } catch (error) {
     setStatus(`Tailoring failed: ${error.message}`, true);
   } finally {
@@ -170,7 +203,8 @@ byId("tailor").addEventListener("click", async () => {
 });
 
 byId("copy").addEventListener("click", async () => {
-  await navigator.clipboard.writeText(byId("resume").innerText);
+  const resume = byId("resume");
+  await navigator.clipboard.writeText(resume.innerText || resume.textContent);
   setStatus("Resume text copied to the clipboard.");
 });
 
@@ -185,7 +219,14 @@ byId("download").addEventListener("click", () => {
   setStatus("Downloaded the canonical Jake-template LaTeX resume.");
 });
 
-byId("print").addEventListener("click", () => window.print());
+byId("download-pdf").addEventListener("click", () => {
+  if (!currentPdfUrl) return;
+  const anchor = document.createElement("a");
+  anchor.href = currentPdfUrl;
+  anchor.download = "Adil_Mallick_Tailored_Resume.pdf";
+  anchor.click();
+  setStatus("Downloaded the locally compiled Jake-template PDF.");
+});
 
 window.addEventListener("focus", checkServer);
 document.addEventListener("visibilitychange", () => {

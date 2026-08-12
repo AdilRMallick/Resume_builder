@@ -45,6 +45,9 @@ def test_resume_preview_never_renders_a_target_job_banner() -> None:
     assert 'class="target"' not in panel
     assert "Selected Projects" not in panel
     assert "Download .tex" in html
+    assert "Download exact PDF" in html
+    assert 'render_pdf: true' in panel
+    assert "data.pdf_base64" in panel
     assert "currentTailoredResume.latex" in panel
 
 
@@ -64,4 +67,4 @@ def test_ai_provider_selection_keeps_secrets_in_the_local_backend() -> None:
     assert 'value="anthropic"' in html
     assert 'value="gemini"' in html
     assert 'value="kimi"' in html
-    assert '"version": "0.1.4"' in manifest
+    assert '"version": "0.2.0"' in manifest
