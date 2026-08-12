@@ -1,4 +1,4 @@
-"""Evidence-grounded resume rewriting through OpenAI or Anthropic.
+"""Evidence-grounded resume rewriting through configured AI providers.
 
 The browser never calls either provider. It sends one request to the localhost API,
 which owns the secret, asks for schema-constrained rewrites, validates every proposed
@@ -44,14 +44,47 @@ REWRITE_SCHEMA: dict[str, Any] = {
     "additionalProperties": False,
 }
 
+CHAT_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "properties": {
+        "assistant_message": {"type": "string"},
+        "rewrites": REWRITE_SCHEMA["properties"]["rewrites"],
+        "remove_source_ids": {"type": "array", "items": {"type": "string"}},
+        "prioritize_source_ids": {"type": "array", "items": {"type": "string"}},
+    },
+    "required": [
+        "assistant_message",
+        "rewrites",
+        "remove_source_ids",
+        "prioritize_source_ids",
+    ],
+    "additionalProperties": False,
+}
+
 SYSTEM_PROMPT = """You tailor one-page software, cloud, and APM resumes.
 Return only schema-conforming JSON. Each rewrite must remain fully supported by its one
 source bullet. Preserve every employer, project, date, technology relationship, scope,
 and metric. Never add a skill, responsibility, leadership claim, outcome, or number.
 Use only keywords listed in that source bullet's verified_tags. Omit bullets that do not
 benefit from rewriting. Keep each accepted bullet concise, specific, and ATS-readable.
+Follow standing_instructions when they are compatible with this evidence policy.
 Do not mention the target company, target title, application, job, or tailoring process.
 """
+
+CHAT_SYSTEM_PROMPT = (
+    SYSTEM_PROMPT
+    + """
+You are revising an existing resume through a short chat. Follow the user's latest
+instruction when it is supported by the supplied evidence. You may rewrite an existing
+bullet, remove an existing bullet, or prioritize existing bullets within their current
+entry. Never create a new bullet or change identity, contact information, organizations,
+titles, dates, education, project names, URLs, or skills. A removal must use a source_id.
+A priority list must contain source_ids in the requested order. Explain what you changed
+in assistant_message. If the request would require unsupported information, make no edit
+and explain what verified evidence is missing. Never claim an edit was made unless it is
+present in the structured actions.
+"""
+)
 
 
 class AIRewriteError(RuntimeError):
@@ -121,7 +154,7 @@ def _validate_candidate(
     source = sources.get(source_id) if isinstance(source_id, str) else None
     if source is None or not isinstance(keywords, list):
         return None
-    original = str(source["text"]).strip()
+    original = str(source.get("source_text") or source["text"]).strip()
     if not 40 <= len(text) <= min(420, max(100, int(len(original) * 1.45))):
         return None
     if "\n" in text or text == original or text.lower().startswith(("i ", "my ")):
@@ -150,6 +183,109 @@ def _validate_candidate(
         ):
             return None
     return source_id, text
+
+
+def _evidence_payload(sources: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+    return [
+        {
+            "source_id": source_id,
+            "text": bullet["text"],
+            "verified_source": bullet.get("source_text") or bullet["text"],
+            "verified_tags": bullet["tags"],
+        }
+        for source_id, bullet in sources.items()
+    ]
+
+
+def _apply_rewrites(
+    result: dict[str, Any],
+    candidates: Any,
+    sources: dict[str, dict[str, Any]],
+) -> tuple[int, int]:
+    if not isinstance(candidates, list):
+        raise AIRewriteError("provider response omitted the rewrites array")
+    accepted: dict[str, str] = {}
+    rejected = 0
+    for candidate in candidates:
+        validated = (
+            _validate_candidate(candidate, sources, target=result["target"])
+            if isinstance(candidate, dict)
+            else None
+        )
+        if validated is None or validated[0] in accepted:
+            rejected += 1
+            continue
+        accepted[validated[0]] = validated[1]
+
+    for source_id, bullet in _bullet_records(result):
+        rewritten = accepted.get(source_id)
+        if rewritten is not None:
+            bullet["source_text"] = bullet.get("source_text") or bullet["text"]
+            bullet["text"] = rewritten
+            bullet["ai_rewritten"] = True
+    return len(accepted), rejected
+
+
+def _apply_chat_structure_edits(
+    result: dict[str, Any],
+    *,
+    remove_source_ids: Any,
+    prioritize_source_ids: Any,
+    valid_source_ids: set[str],
+) -> tuple[int, int, int]:
+    rejected = 0
+    requested_removals: set[str] = set()
+    if isinstance(remove_source_ids, list):
+        for value in remove_source_ids:
+            if isinstance(value, str) and value in valid_source_ids:
+                requested_removals.add(value)
+            else:
+                rejected += 1
+    else:
+        rejected += 1
+
+    priorities: list[str] = []
+    if isinstance(prioritize_source_ids, list):
+        for value in prioritize_source_ids:
+            if isinstance(value, str) and value in valid_source_ids and value not in priorities:
+                priorities.append(value)
+            else:
+                rejected += 1
+    else:
+        rejected += 1
+    priority = {source_id: index for index, source_id in enumerate(priorities)}
+
+    removed = 0
+    prioritized = 0
+    for section in SECTIONS:
+        for entry_index, entry in enumerate(result.get(section, [])):
+            bullets = entry.get("bullets", [])
+            records = [
+                (f"{section}:{entry_index}:{bullet_index}", bullet)
+                for bullet_index, bullet in enumerate(bullets)
+            ]
+            removable = [source_id for source_id, _ in records if source_id in requested_removals]
+            allowed_removals = set(removable[: max(0, len(records) - 1)])
+            rejected += len(removable) - len(allowed_removals)
+            records = [record for record in records if record[0] not in allowed_removals]
+            removed += len(allowed_removals)
+            original_order = [source_id for source_id, _ in records]
+            records.sort(
+                key=lambda record: (
+                    record[0] not in priority,
+                    priority.get(record[0], len(priority)),
+                    original_order.index(record[0]),
+                )
+            )
+            new_order = [source_id for source_id, _ in records]
+            if new_order != original_order:
+                prioritized += sum(
+                    source_id in priority
+                    for source_id, old_source_id in zip(new_order, original_order, strict=True)
+                    if source_id != old_source_id
+                )
+            entry["bullets"] = [bullet for _, bullet in records]
+    return removed, prioritized, rejected
 
 
 def _openai_call(
@@ -360,6 +496,7 @@ def customize_with_ai(
     *,
     job_description: str,
     provider: Provider,
+    steering_prompt: str = "",
     settings: Settings | None = None,
     call_provider: ProviderCall | None = None,
 ) -> dict[str, Any]:
@@ -367,56 +504,93 @@ def customize_with_ai(
     cfg = settings or get_settings()
     result = copy.deepcopy(tailored)
     sources = dict(_bullet_records(result))
-    evidence = [
-        {"source_id": source_id, "text": bullet["text"], "verified_tags": bullet["tags"]}
-        for source_id, bullet in sources.items()
-    ]
     user = json.dumps(
         {
             "target_title": result["target"].get("title", ""),
             "job_description": job_description,
-            "source_bullets": evidence,
+            "standing_instructions": steering_prompt,
+            "source_bullets": _evidence_payload(sources),
         },
         ensure_ascii=False,
     )
     caller = call_provider or _call_provider
     payload, model = caller(provider, SYSTEM_PROMPT, user, REWRITE_SCHEMA, cfg)
-    candidates = payload.get("rewrites")
-    if not isinstance(candidates, list):
-        raise AIRewriteError("provider response omitted the rewrites array")
-
-    accepted: dict[str, str] = {}
-    rejected = 0
-    for candidate in candidates:
-        validated = (
-            _validate_candidate(candidate, sources, target=result["target"])
-            if isinstance(candidate, dict)
-            else None
-        )
-        if validated is None or validated[0] in accepted:
-            rejected += 1
-            continue
-        accepted[validated[0]] = validated[1]
-
-    for source_id, bullet in _bullet_records(result):
-        rewritten = accepted.get(source_id)
-        if rewritten is not None:
-            bullet["source_text"] = bullet["text"]
-            bullet["text"] = rewritten
-            bullet["ai_rewritten"] = True
+    accepted, rejected = _apply_rewrites(result, payload.get("rewrites"), sources)
 
     result["customization"] = {
         "requested_mode": provider,
         "applied_mode": "ai" if accepted else "verified",
         "provider": provider,
         "model": model,
-        "rewritten_bullets": len(accepted),
+        "rewritten_bullets": accepted,
         "rejected_rewrites": rejected,
         "warning": None if accepted else "The model returned no rewrite that passed validation.",
     }
     if accepted:
         result["source_rule"] = (
             "AI-assisted wording tied to verified source bullets; review highlighted rewrites."
+        )
+    result["latex"] = render_jake_latex(result)
+    return result
+
+
+def revise_with_ai(
+    tailored: dict[str, Any],
+    *,
+    job_description: str,
+    provider: Provider,
+    messages: list[dict[str, str]],
+    steering_prompt: str = "",
+    settings: Settings | None = None,
+    call_provider: ProviderCall | None = None,
+) -> dict[str, Any]:
+    """Apply a conversational revision while keeping every resume claim grounded."""
+    cfg = settings or get_settings()
+    result = copy.deepcopy(tailored)
+    sources = dict(_bullet_records(result))
+    user = json.dumps(
+        {
+            "target_title": result["target"].get("title", ""),
+            "job_description": job_description,
+            "standing_instructions": steering_prompt,
+            "conversation": messages,
+            "source_bullets": _evidence_payload(sources),
+        },
+        ensure_ascii=False,
+    )
+    caller = call_provider or _call_provider
+    payload, model = caller(provider, CHAT_SYSTEM_PROMPT, user, CHAT_SCHEMA, cfg)
+    rewritten, rejected = _apply_rewrites(result, payload.get("rewrites"), sources)
+    removed, prioritized, structure_rejected = _apply_chat_structure_edits(
+        result,
+        remove_source_ids=payload.get("remove_source_ids"),
+        prioritize_source_ids=payload.get("prioritize_source_ids"),
+        valid_source_ids=set(sources),
+    )
+    rejected += structure_rejected
+    applied = bool(rewritten or removed or prioritized)
+    assistant_message = str(payload.get("assistant_message", "")).strip()
+    if not assistant_message:
+        assistant_message = (
+            "I applied the evidence-grounded revision."
+            if applied
+            else "I couldn't make that change without adding unsupported information."
+        )
+    result["customization"] = {
+        "requested_mode": provider,
+        "applied_mode": "ai" if applied else "verified",
+        "provider": provider,
+        "model": model,
+        "rewritten_bullets": rewritten,
+        "rejected_rewrites": rejected,
+        "warning": None if applied else "No requested edit passed evidence validation.",
+    }
+    result["chat_reply"] = assistant_message[:2000]
+    result["chat_removed_bullets"] = removed
+    result["chat_prioritized_bullets"] = prioritized
+    if applied:
+        result["source_rule"] = (
+            "Chat revisions are limited to verified bullets; unsupported claims are rejected."
         )
     result["latex"] = render_jake_latex(result)
     return result

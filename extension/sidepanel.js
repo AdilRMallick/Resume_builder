@@ -1,6 +1,7 @@
 "use strict";
 
 const API = "http://127.0.0.1:8002";
+const STEERING_PROMPT_KEY = "jme.resumeSteeringPrompt";
 const byId = (id) => document.getElementById(id);
 const escapeHTML = (value) => String(value ?? "").replace(/[&<>"']/g, (character) =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[character])
@@ -10,11 +11,24 @@ let currentUrl = "";
 let serverReady = false;
 let currentTailoredResume = null;
 let currentPdfUrl = "";
+let chatMessages = [];
+let chatProvider = "verified";
 
 function updateCount() {
   const length = byId("job-description").value.length;
   byId("character-count").textContent = `${length.toLocaleString()} characters`;
   byId("tailor").disabled = !serverReady || length < 50;
+  updateChatAvailability();
+}
+
+function updateChatAvailability() {
+  const provider = byId("customization-mode").value;
+  const ready = serverReady && currentTailoredResume && provider !== "verified";
+  byId("chat-message").disabled = !ready;
+  byId("send-chat").disabled = !ready || !byId("chat-message").value.trim();
+  byId("chat-provider").textContent = ready
+    ? byId("customization-mode").selectedOptions[0].textContent
+    : "Choose an available AI provider";
 }
 
 function setStatus(message, error = false) {
@@ -57,6 +71,28 @@ async function loadProviders() {
   byId("provider-note").textContent = availableAI.length
     ? "AI sends this job description and selected verified bullets to the chosen provider."
     : "Add an OpenAI, Anthropic, Gemini, or Moonshot key to .env, then restart JME.";
+}
+
+function renderChatThread() {
+  const thread = byId("chat-thread");
+  if (!chatMessages.length) {
+    thread.innerHTML = '<p class="chat-empty">Ask for a specific change. The revised Jake-template PDF will replace the preview above.</p>';
+    return;
+  }
+  thread.innerHTML = chatMessages.map((message) => `
+    <div class="chat-message ${message.role}">
+      <span>${message.role === "user" ? "You" : "AI"}</span>
+      <p>${escapeHTML(message.content)}</p>
+    </div>`).join("");
+  thread.scrollTop = thread.scrollHeight;
+}
+
+function resetChat(provider) {
+  chatMessages = [];
+  chatProvider = provider;
+  byId("chat-message").value = "";
+  renderChatThread();
+  updateChatAvailability();
 }
 
 function renderEntry(entry, sectionTitle) {
@@ -138,6 +174,7 @@ function renderResume(data) {
     byId("edit-note").textContent = `${evidenceNote} ${data.pdf_error || "The LaTeX PDF preview is unavailable."}`;
   }
   byId("result").hidden = false;
+  updateChatAvailability();
   byId("result").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
@@ -181,12 +218,14 @@ byId("tailor").addEventListener("click", async () => {
         title: byId("job-title").value,
         company: byId("job-company").value,
         url: currentUrl,
+        steering_prompt: byId("steering-prompt").value.trim(),
         render_pdf: true,
         customization_mode: byId("customization-mode").value,
       }),
     });
     if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
     const data = await response.json();
+    resetChat(byId("customization-mode").value);
     renderResume(data);
     const customization = data.customization;
     const message = customization.applied_mode === "ai"
@@ -199,6 +238,71 @@ byId("tailor").addEventListener("click", async () => {
   } finally {
     button.firstElementChild.textContent = "Build tailored resume";
     updateCount();
+  }
+});
+
+byId("steering-prompt").value = localStorage.getItem(STEERING_PROMPT_KEY) || "";
+byId("steering-prompt").addEventListener("input", () => {
+  localStorage.setItem(STEERING_PROMPT_KEY, byId("steering-prompt").value);
+});
+
+byId("customization-mode").addEventListener("change", () => {
+  if (chatProvider !== byId("customization-mode").value) {
+    resetChat(byId("customization-mode").value);
+  }
+  updateChatAvailability();
+});
+
+byId("chat-message").addEventListener("input", updateChatAvailability);
+
+byId("chat-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const input = byId("chat-message");
+  const message = input.value.trim();
+  const provider = byId("customization-mode").value;
+  if (!message || !currentTailoredResume || provider === "verified") return;
+
+  chatMessages.push({ role: "user", content: message });
+  chatMessages = chatMessages.slice(-12);
+  input.value = "";
+  renderChatThread();
+  updateChatAvailability();
+  input.disabled = true;
+  byId("send-chat").disabled = true;
+  byId("send-chat").textContent = "Revising...";
+  setStatus("Applying your instruction and recompiling the one-page PDF...");
+  try {
+    const response = await fetch(`${API}/resume/chat`, {
+      method: "POST",
+      headers: { "content-type": "application/json", accept: "application/json" },
+      body: JSON.stringify({
+        job_description: byId("job-description").value,
+        title: byId("job-title").value,
+        company: byId("job-company").value,
+        url: currentUrl,
+        steering_prompt: byId("steering-prompt").value.trim(),
+        provider,
+        messages: chatMessages,
+        render_pdf: true,
+      }),
+    });
+    if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+    const data = await response.json();
+    renderResume(data);
+    chatMessages.push({ role: "assistant", content: data.chat_reply });
+    chatMessages = chatMessages.slice(-12);
+    renderChatThread();
+    const actions = [
+      data.customization.rewritten_bullets ? `${data.customization.rewritten_bullets} rewritten` : "",
+      data.chat_removed_bullets ? `${data.chat_removed_bullets} removed` : "",
+      data.chat_prioritized_bullets ? `${data.chat_prioritized_bullets} reprioritized` : "",
+    ].filter(Boolean).join(", ");
+    setStatus(actions ? `Revision complete: ${actions}.` : data.chat_reply);
+  } catch (error) {
+    setStatus(`Revision failed: ${error.message}`, true);
+  } finally {
+    byId("send-chat").textContent = "Send revision";
+    updateChatAvailability();
   }
 });
 
