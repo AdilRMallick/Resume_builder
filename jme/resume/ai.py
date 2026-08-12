@@ -10,11 +10,13 @@ from __future__ import annotations
 import copy
 import json
 import re
+import ssl
 from collections.abc import Callable, Iterator
 from typing import Any, Literal
 from urllib.parse import quote
 
 import httpx
+import truststore
 
 from jme.config import Settings, get_settings
 from jme.resume.latex import render_jake_latex
@@ -89,6 +91,11 @@ present in the structured actions.
 
 class AIRewriteError(RuntimeError):
     """A provider could not produce a usable structured response."""
+
+
+def _provider_ssl_context() -> ssl.SSLContext:
+    """Use the native OS trust store while keeping certificate checks enabled."""
+    return truststore.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
 
 
 def provider_catalog(settings: Settings | None = None) -> list[dict[str, Any]]:
@@ -288,6 +295,32 @@ def _apply_chat_structure_edits(
     return removed, prioritized, rejected
 
 
+def _chat_action_summary(
+    *, rewritten: int, removed: int, prioritized: int, rejected: int
+) -> str:
+    actions = []
+    if rewritten:
+        actions.append(f"rewrote {rewritten} verified bullet{'s' if rewritten != 1 else ''}")
+    if removed:
+        actions.append(f"removed {removed} bullet{'s' if removed != 1 else ''}")
+    if prioritized:
+        actions.append(
+            f"reprioritized {prioritized} bullet{'s' if prioritized != 1 else ''}"
+        )
+    if not actions:
+        return (
+            "I couldn't make that change without adding unsupported information. "
+            f"{rejected} proposed action{'s were' if rejected != 1 else ' was'} rejected."
+        )
+    summary = f"I updated your verified resume: {', '.join(actions)}."
+    if rejected:
+        summary += (
+            f" I also rejected {rejected} unsupported proposed "
+            f"action{'s' if rejected != 1 else ''}."
+        )
+    return summary
+
+
 def _openai_call(
     system: str, user: str, schema: dict[str, Any], settings: Settings
 ) -> tuple[dict[str, Any], str]:
@@ -318,6 +351,7 @@ def _openai_call(
             },
             json=body,
             timeout=settings.resume_ai_timeout_sec,
+            verify=_provider_ssl_context(),
         )
         response.raise_for_status()
         payload = response.json()
@@ -351,14 +385,17 @@ def _anthropic_call(
     try:
         import anthropic
 
-        response = anthropic.Anthropic(api_key=settings.anthropic_api_key).messages.create(
-            model=settings.resume_anthropic_model,
-            max_tokens=6000,
-            system=system,
-            messages=[{"role": "user", "content": user}],
-            output_config={"format": {"type": "json_schema", "schema": schema}},
-            timeout=settings.resume_ai_timeout_sec,
-        )
+        with httpx.Client(verify=_provider_ssl_context()) as http_client:
+            response = anthropic.Anthropic(
+                api_key=settings.anthropic_api_key, http_client=http_client
+            ).messages.create(
+                model=settings.resume_anthropic_model,
+                max_tokens=6000,
+                system=system,
+                messages=[{"role": "user", "content": user}],
+                output_config={"format": {"type": "json_schema", "schema": schema}},
+                timeout=settings.resume_ai_timeout_sec,
+            )
     except Exception as exc:  # noqa: BLE001 - SDK exceptions change across versions
         raise AIRewriteError(f"Claude request failed: {exc}") from exc
     if response.stop_reason in {"refusal", "max_tokens"}:
@@ -396,6 +433,7 @@ def _gemini_call(
             },
             json=body,
             timeout=settings.resume_ai_timeout_sec,
+            verify=_provider_ssl_context(),
         )
         response.raise_for_status()
         payload = response.json()
@@ -455,6 +493,7 @@ def _kimi_call(
             },
             json=body,
             timeout=settings.resume_ai_timeout_sec,
+            verify=_provider_ssl_context(),
         )
         response.raise_for_status()
         payload = response.json()
@@ -569,13 +608,6 @@ def revise_with_ai(
     )
     rejected += structure_rejected
     applied = bool(rewritten or removed or prioritized)
-    assistant_message = str(payload.get("assistant_message", "")).strip()
-    if not assistant_message:
-        assistant_message = (
-            "I applied the evidence-grounded revision."
-            if applied
-            else "I couldn't make that change without adding unsupported information."
-        )
     result["customization"] = {
         "requested_mode": provider,
         "applied_mode": "ai" if applied else "verified",
@@ -585,7 +617,12 @@ def revise_with_ai(
         "rejected_rewrites": rejected,
         "warning": None if applied else "No requested edit passed evidence validation.",
     }
-    result["chat_reply"] = assistant_message[:2000]
+    result["chat_reply"] = _chat_action_summary(
+        rewritten=rewritten,
+        removed=removed,
+        prioritized=prioritized,
+        rejected=rejected,
+    )
     result["chat_removed_bullets"] = removed
     result["chat_prioritized_bullets"] = prioritized
     if applied:

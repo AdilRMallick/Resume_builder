@@ -152,7 +152,8 @@ def test_chat_applies_grounded_revisions_and_returns_an_explanation() -> None:
     assert result["customization"]["applied_mode"] == "ai"
     assert result["customization"]["rewritten_bullets"] == 1
     assert result["chat_removed_bullets"] == 1
-    assert result["chat_reply"].startswith("I emphasized")
+    assert "rewrote 1 verified bullet" in result["chat_reply"]
+    assert "removed 1 bullet" in result["chat_reply"]
     assert "Chat revisions are limited" in result["source_rule"]
     assert "Tailored for" not in result["latex"]
 
@@ -191,8 +192,8 @@ class _FakeResponse:
 def test_gemini_uses_backend_key_and_json_schema(monkeypatch) -> None:
     captured = {}
 
-    def fake_post(url, *, headers, json, timeout):
-        captured.update(url=url, headers=headers, body=json, timeout=timeout)
+    def fake_post(url, *, headers, json, timeout, verify):
+        captured.update(url=url, headers=headers, body=json, timeout=timeout, verify=verify)
         return _FakeResponse(
             {
                 "candidates": [
@@ -214,6 +215,7 @@ def test_gemini_uses_backend_key_and_json_schema(monkeypatch) -> None:
     assert payload == {"rewrites": []}
     assert model == "gemini-3.6-flash"
     assert captured["headers"]["x-goog-api-key"] == "gemini-secret"
+    assert captured["verify"].verify_mode.name == "CERT_REQUIRED"
     assert captured["body"]["generationConfig"]["responseMimeType"] == "application/json"
     assert captured["body"]["generationConfig"]["responseJsonSchema"] == {
         "type": "object"
@@ -223,8 +225,8 @@ def test_gemini_uses_backend_key_and_json_schema(monkeypatch) -> None:
 def test_kimi_uses_moonshot_backend_key_and_structured_output(monkeypatch) -> None:
     captured = {}
 
-    def fake_post(url, *, headers, json, timeout):
-        captured.update(url=url, headers=headers, body=json, timeout=timeout)
+    def fake_post(url, *, headers, json, timeout, verify):
+        captured.update(url=url, headers=headers, body=json, timeout=timeout, verify=verify)
         return _FakeResponse(
             {
                 "choices": [
@@ -247,5 +249,6 @@ def test_kimi_uses_moonshot_backend_key_and_structured_output(monkeypatch) -> No
     assert model == "kimi-k2.6"
     assert captured["url"] == "https://api.moonshot.ai/v1/chat/completions"
     assert captured["headers"]["authorization"] == "Bearer kimi-secret"
+    assert captured["verify"].verify_mode.name == "CERT_REQUIRED"
     assert captured["body"]["response_format"]["type"] == "json_schema"
     assert captured["body"]["thinking"] == {"type": "disabled"}
