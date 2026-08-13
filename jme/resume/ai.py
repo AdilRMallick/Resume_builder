@@ -1,8 +1,13 @@
 """Evidence-grounded resume rewriting through configured AI providers.
 
-The browser never calls either provider. It sends one request to the localhost API,
-which owns the secret, asks for schema-constrained rewrites, validates every proposed
+The browser never calls a provider. It sends one request to the localhost API, which
+owns every secret, asks for schema-constrained rewrites, validates every proposed
 bullet, and falls back to deterministic tailoring on any failure.
+
+Providers split into two kinds. The HTTP ones (OpenAI, Anthropic, Gemini, Kimi) bill an
+API key held in .env. The `claude_code` one shells out to the locally installed Claude
+Code CLI, so it needs no key at all and draws on that CLI's Claude subscription
+allowance instead; see jme.resume.claude_code.
 """
 
 from __future__ import annotations
@@ -19,9 +24,11 @@ import httpx
 import truststore
 
 from jme.config import Settings, get_settings
+from jme.resume.claude_code import ClaudeCodeError, claude_code_call
+from jme.resume.claude_code import is_available as claude_code_available
 from jme.resume.latex import render_jake_latex
 
-Provider = Literal["openai", "anthropic", "gemini", "kimi"]
+Provider = Literal["openai", "anthropic", "gemini", "kimi", "claude_code"]
 ProviderCall = Callable[[Provider, str, str, dict[str, Any], Settings], tuple[dict[str, Any], str]]
 
 SECTIONS = ("education", "experience", "projects", "leadership")
@@ -67,8 +74,11 @@ SYSTEM_PROMPT = """You tailor one-page software, cloud, and APM resumes.
 Return only schema-conforming JSON. Each rewrite must remain fully supported by its one
 source bullet. Preserve every employer, project, date, technology relationship, scope,
 and metric. Never add a skill, responsibility, leadership claim, outcome, or number.
-Use only keywords listed in that source bullet's verified_tags. Omit bullets that do not
-benefit from rewriting. Keep each accepted bullet concise, specific, and ATS-readable.
+Use only keywords listed in that source bullet's verified_tags. In keywords_used, list
+only the verified_tags you wrote into that rewrite word for word, spelled exactly as the
+tag is spelled. Drop any tag you paraphrased, pluralized, inflected, or left out; an
+empty keywords_used is better than one unmatched entry. Never pad a sentence with tags
+to make them countable. Omit bullets that do not benefit from rewriting. Keep each accepted bullet concise, specific, and ATS-readable.
 Follow standing_instructions when they are compatible with this evidence policy.
 Do not mention the target company, target title, application, job, or tailoring process.
 """
@@ -103,6 +113,12 @@ def provider_catalog(settings: Settings | None = None) -> list[dict[str, Any]]:
     cfg = settings or get_settings()
     return [
         {"id": "verified", "label": "Verified only", "available": True, "model": None},
+        {
+            "id": "claude_code",
+            "label": "AI rewrite · Claude Code (local, no API key)",
+            "available": claude_code_available(cfg),
+            "model": cfg.resume_claude_code_model or None,
+        },
         {
             "id": "openai",
             "label": "AI rewrite · OpenAI",
@@ -514,6 +530,16 @@ def _kimi_call(
         raise AIRewriteError("Kimi returned invalid structured JSON") from exc
 
 
+def _claude_code_call(
+    system: str, user: str, schema: dict[str, Any], settings: Settings
+) -> tuple[dict[str, Any], str]:
+    """Adapt the local CLI's failures onto the same contract the HTTP providers use."""
+    try:
+        return claude_code_call(system, user, schema, settings)
+    except ClaudeCodeError as exc:
+        raise AIRewriteError(str(exc)) from exc
+
+
 def _call_provider(
     provider: Provider,
     system: str,
@@ -527,6 +553,8 @@ def _call_provider(
         return _anthropic_call(system, user, schema, settings)
     if provider == "gemini":
         return _gemini_call(system, user, schema, settings)
+    if provider == "claude_code":
+        return _claude_code_call(system, user, schema, settings)
     return _kimi_call(system, user, schema, settings)
 
 

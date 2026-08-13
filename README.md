@@ -66,9 +66,22 @@ an online LaTeX service.
    rewrites, removals, or reprioritization. Each reply recompiles the PDF.
 8. Review the real compiled PDF, then copy its text or download the `.tex` or `.pdf` file.
 
-Verified mode works immediately and never calls an AI provider. To enable AI rewriting,
-open `.env`, add exactly one key, save the file, stop the server with `Ctrl+C`, and run
-the start command again:
+Verified mode works immediately and never calls an AI provider.
+
+The simplest way to enable AI rewriting needs **no API key**. If you have a paid Claude
+subscription, install the [Claude Code](https://claude.com/claude-code) CLI, then run:
+
+```powershell
+claude auth login
+```
+
+Restart the server and pick **AI rewrite · Claude Code** in the panel. The backend runs
+`claude -p` locally for each rewrite, so the work draws on your Claude subscription
+allowance and stops when that subscription's usage limit is reached. A free Claude.ai
+account does not include this programmatic route.
+
+Otherwise, open `.env`, add exactly one key, save the file, stop the server with
+`Ctrl+C`, and run the start command again:
 
 ```dotenv
 GEMINI_API_KEY=your-key-here
@@ -216,11 +229,28 @@ at `GET /digest`.
 is open, click **Use current job page** to capture its visible description, or paste or
 upload a text/Markdown/HTML description. The local API always selects relevant verified
 bullets from `jme/resume/profile.json`. You can keep that deterministic wording or ask
-OpenAI, Claude, Gemini, or Kimi to propose evidence-linked rewrites; numeric, keyword, source, and target-
-banner checks run before any rewrite is accepted. The result uses Jake's canonical LaTeX
-layout and is compiled locally into the PDF shown in the extension.
+the local Claude Code CLI, OpenAI, Claude, Gemini, or Kimi to propose evidence-linked
+rewrites; numeric, keyword, source, and target-banner checks run before any rewrite is
+accepted. The result uses Jake's canonical LaTeX layout and is compiled locally into the
+PDF shown in the extension.
 
-AI is optional. Put one provider key in `.env` and restart the API:
+AI is optional, and there are two ways to pay for it.
+
+**Subscription, no API key.** `jme/resume/claude_code.py` shells out to a locally
+installed, signed-in Claude Code CLI (`claude -p`) with tools disabled, a JSON schema
+enforced, session persistence off, and a throwaway working directory. Rewrites draw on
+that CLI's Claude subscription allowance and stop when its usage limit is reached. The
+child process is stripped of `ANTHROPIC_API_KEY`, `ANTHROPIC_AUTH_TOKEN`,
+`ANTHROPIC_BASE_URL`, and the Bedrock/Vertex switches, so a key configured for the API
+providers can never silently redirect this path onto metered API billing.
+
+A rewrite takes roughly 85 seconds at the default `JME_RESUME_CLAUDE_CODE_EFFORT=medium`,
+against about 30 seconds at `low` — but at `low`, noticeably fewer proposed rewrites
+survive evidence validation. Other knobs: `JME_RESUME_CLAUDE_CODE_MODEL`,
+`JME_RESUME_CLAUDE_CODE_TIMEOUT_SEC`, `JME_CLAUDE_CODE_CLI_PATH`, and
+`JME_RESUME_CLAUDE_CODE_ENABLED=false` to hide the option entirely.
+
+**API key.** Put one provider key in `.env` and restart the API:
 
 ```dotenv
 OPENAI_API_KEY=your-key

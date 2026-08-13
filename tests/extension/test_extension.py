@@ -63,6 +63,7 @@ def test_ai_provider_selection_keeps_secrets_in_the_local_backend() -> None:
     assert "x-api-key" not in panel.lower()
     assert "sk-" not in panel
     assert 'value="verified"' in html
+    assert 'value="claude_code"' in html
     assert 'value="openai"' in html
     assert 'value="anthropic"' in html
     assert 'value="gemini"' in html

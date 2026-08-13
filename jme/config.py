@@ -56,6 +56,24 @@ class Settings(BaseSettings):
         default="gemini-3.6-flash", alias="JME_RESUME_GEMINI_MODEL"
     )
     resume_kimi_model: str = Field(default="kimi-k2.6", alias="JME_RESUME_KIMI_MODEL")
+    # Local Claude Code CLI. Uses the signed-in Claude subscription, never an API key.
+    resume_claude_code_enabled: bool = Field(
+        default=True, alias="JME_RESUME_CLAUDE_CODE_ENABLED"
+    )
+    claude_code_cli_path: str | None = Field(default=None, alias="JME_CLAUDE_CODE_CLI_PATH")
+    resume_claude_code_model: str = Field(
+        default="sonnet", alias="JME_RESUME_CLAUDE_CODE_MODEL"
+    )
+    # Measured on this bullet bank: low ~30s but few rewrites survive validation,
+    # medium ~85s and most do, the CLI default is slower still with no gain.
+    resume_claude_code_effort: str = Field(
+        default="medium", alias="JME_RESUME_CLAUDE_CODE_EFFORT"
+    )
+    # The CLI boots a whole agent runtime and its latency has a long tail, so it needs
+    # far more headroom than an HTTP call.
+    resume_claude_code_timeout_sec: int = Field(
+        default=300, alias="JME_RESUME_CLAUDE_CODE_TIMEOUT_SEC"
+    )
     resume_ai_timeout_sec: int = Field(default=90, alias="JME_RESUME_AI_TIMEOUT_SEC")
     resume_tectonic_path: str | None = Field(default=None, alias="JME_TECTONIC_PATH")
     resume_pdf_timeout_sec: int = Field(default=120, alias="JME_RESUME_PDF_TIMEOUT_SEC")

@@ -2,6 +2,8 @@
 
 const API = "http://127.0.0.1:8002";
 const STEERING_PROMPT_KEY = "jme.resumeSteeringPrompt";
+// The panel holds no credential of any kind; it only explains what the backend reported.
+const UNAVAILABLE_HINTS = { claude_code: "CLI not detected" };
 const byId = (id) => document.getElementById(id);
 const escapeHTML = (value) => String(value ?? "").replace(/[&<>"']/g, (character) =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[character])
@@ -63,14 +65,14 @@ async function loadProviders() {
     option.disabled = !provider.available;
     option.textContent = provider.available
       ? `${provider.label}${provider.model ? ` · ${provider.model}` : ""}`
-      : `${provider.label} (key not configured)`;
+      : `${provider.label} (${UNAVAILABLE_HINTS[provider.id] || "not configured"})`;
   }
   const availableAI = data.providers.filter(
     (provider) => provider.id !== "verified" && provider.available
   );
   byId("provider-note").textContent = availableAI.length
-    ? "AI sends this job description and selected verified bullets to the chosen provider."
-    : "Add an OpenAI, Anthropic, Gemini, or Moonshot key to .env, then restart JME.";
+    ? "AI sends this job description and selected verified bullets to the chosen provider. Claude Code runs through the local CLI on your Claude subscription; the other providers bill their API key."
+    : "Sign in to the local Claude Code CLI with `claude auth login`, or add an OpenAI, Anthropic, Gemini, or Moonshot key to .env, then restart JME.";
 }
 
 function renderChatThread() {

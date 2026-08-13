@@ -118,6 +118,7 @@ def test_resume_provider_status_never_exposes_keys(client, monkeypatch) -> None:
     body = response.json()
     assert {item["id"] for item in body["providers"]} == {
         "verified",
+        "claude_code",
         "openai",
         "anthropic",
         "gemini",
@@ -165,7 +166,7 @@ def test_resume_chat_rebuilds_from_verified_profile_and_applies_standing_prompt(
     assert "Tailored for" not in body["latex"]
 
 
-@pytest.mark.parametrize("mode", ["openai", "anthropic", "gemini", "kimi"])
+@pytest.mark.parametrize("mode", ["openai", "anthropic", "gemini", "kimi", "claude_code"])
 def test_resume_ai_failure_falls_back_to_verified_output(
     client, monkeypatch, mode
 ) -> None:
