@@ -18,6 +18,10 @@ bin/
 fetcher/fetcher
 fetcher/*.exe
 
+# javascript - the extension's optional DOM test suite installs jsdom here
+node_modules/
+package-lock.json
+
 # editors / os
 .vscode/
 .idea/

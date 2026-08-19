@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>JME Apply · Profile</title>
+  <link rel="stylesheet" href="editor.css">
+</head>
+<body>
+  <header class="page-header">
+    <div>
+      <p class="eyebrow">Stored on this device only</p>
+      <h1>Your application profile</h1>
+      <p class="lede">Everything here lives in this browser's local storage. It is read by the autofill engine inside the Workday tab and is never sent to any server.</p>
+    </div>
+    <div class="header-actions">
+      <span class="save-state" id="save-state">Loaded</span>
+      <button class="ghost" id="import-resume" type="button">Import from JME</button>
+      <button class="ghost" id="export" type="button">Export JSON</button>
+      <label class="ghost" for="import-file">Import JSON</label>
+      <input id="import-file" type="file" accept="application/json,.json">
+      <button class="primary" id="save" type="button">Save profile</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>Personal</h2>
+      <div class="grid">
+        <label>First name<input data-path="personal.firstName" type="text" autocomplete="off"></label>
+        <label>Middle name<input data-path="personal.middleName" type="text" autocomplete="off"></label>
+        <label>Last name<input data-path="personal.lastName" type="text" autocomplete="off"></label>
+        <label>Preferred name<input data-path="personal.preferredName" type="text" autocomplete="off"></label>
+        <label>Email<input data-path="personal.email" type="email" autocomplete="off"></label>
+        <label>Phone<input data-path="personal.phone" type="tel" autocomplete="off"></label>
+        <label>Phone type
+          <select data-path="personal.phoneType">
+            <option>Mobile</option><option>Home</option><option>Work</option>
+          </select>
+        </label>
+        <label>Phone country code<input data-path="personal.phoneCountryCode" type="text"></label>
+      </div>
+      <div class="grid">
+        <label class="span-2">Address line 1<input data-path="personal.address1" type="text" autocomplete="off"></label>
+        <label class="span-2">Address line 2<input data-path="personal.address2" type="text" autocomplete="off"></label>
+        <label>City<input data-path="personal.city" type="text" autocomplete="off"></label>
+        <label>State / province<input data-path="personal.state" type="text" autocomplete="off"></label>
+        <label>Postal code<input data-path="personal.postalCode" type="text" autocomplete="off"></label>
+        <label>Country<input data-path="personal.country" type="text" autocomplete="off"></label>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Links</h2>
+      <div class="grid">
+        <label>LinkedIn<input data-path="links.linkedin" type="url" placeholder="https://linkedin.com/in/..."></label>
+        <label>GitHub<input data-path="links.github" type="url" placeholder="https://github.com/..."></label>
+        <label>Portfolio<input data-path="links.portfolio" type="url" placeholder="https://..."></label>
+        <label>Other URLs<input data-path="links.other" data-list type="text" placeholder="comma separated"></label>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Work experience</h2>
+        <button class="ghost" id="add-work" type="button">Add job</button>
+      </div>
+      <p class="hint">Newest first. Workday fills its repeating panels in this order.</p>
+      <div id="work-list" class="repeater"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2>Education</h2>
+        <button class="ghost" id="add-education" type="button">Add school</button>
+      </div>
+      <div id="education-list" class="repeater"></div>
+    </section>
+
+    <section class="card">
+      <h2>Skills</h2>
+      <label>Skills<textarea data-path="skills" data-list rows="3" placeholder="Python, FastAPI, PostgreSQL, AWS"></textarea></label>
+      <p class="hint">Comma separated. Workday only accepts skills from its own list, so anything it does not offer is reported and skipped rather than forced.</p>
+    </section>
+
+    <section class="card">
+      <h2>Standard questions</h2>
+      <div class="grid">
+        <label>How did you hear about us<input data-path="application.howHeard" data-list type="text" placeholder="Company Website, LinkedIn"></label>
+        <label>Previously employed here
+          <select data-path="application.previouslyEmployed"><option>No</option><option>Yes</option></select>
+        </label>
+        <label>Legally authorized to work
+          <select data-path="application.workAuthorized"><option>Yes</option><option>No</option></select>
+        </label>
+        <label>Require visa sponsorship
+          <select data-path="application.requireSponsorship"><option>No</option><option>Yes</option></select>
+        </label>
+        <label>Willing to relocate
+          <select data-path="application.willingToRelocate"><option>Yes</option><option>No</option></select>
+        </label>
+        <label>Desired salary<input data-path="application.desiredSalary" type="text" placeholder="Negotiable"></label>
+        <label>Available start date<input data-path="application.availableStartDate" type="date"></label>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Resume file</h2>
+      <div class="resume-row">
+        <div id="resume-state" class="resume-state">No resume attached.</div>
+        <label class="ghost" for="resume-file">Choose file</label>
+        <input id="resume-file" type="file" accept=".pdf,.doc,.docx,application/pdf">
+        <button class="ghost" id="clear-resume" type="button">Remove</button>
+      </div>
+      <p class="hint">Attached to the upload field on the My Experience step. The Tailor tab can also save its compiled PDF here in one click.</p>
+    </section>
+
+    <section class="card">
+      <h2>Voluntary disclosures</h2>
+      <label class="toggle">
+        <input data-path="preferences.fillVoluntary" type="checkbox">
+        <span>Let the extension answer gender, race, veteran, and disability questions from the values below. Off by default — these are optional on every application.</span>
+      </label>
+      <div class="grid">
+        <label>Gender<input data-path="voluntary.gender" type="text" placeholder="Male / Female / I do not wish to answer"></label>
+        <label>Race / ethnicity<input data-path="voluntary.ethnicity" type="text" placeholder="Asian (Not Hispanic or Latino)"></label>
+        <label>Hispanic or Latino<input data-path="voluntary.hispanicLatino" type="text" placeholder="No"></label>
+        <label>Veteran status<input data-path="voluntary.veteranStatus" type="text" placeholder="I am not a protected veteran"></label>
+        <label>Disability status<input data-path="voluntary.disability" type="text" placeholder="No, I do not have a disability"></label>
+      </div>
+      <label class="toggle">
+        <input data-path="preferences.acceptTerms" type="checkbox">
+        <span>Tick acknowledgement checkboxes ("I have read and agree...") automatically. Leave off if you would rather read each one.</span>
+      </label>
+    </section>
+
+    <section class="card">
+      <h2>Fill behaviour</h2>
+      <label class="toggle">
+        <input data-path="preferences.overwrite" type="checkbox">
+        <span>Overwrite fields that already have a value. Off by default, so anything Workday parsed from your uploaded resume is left alone.</span>
+      </label>
+    </section>
+  </main>
+
+  <footer>
+    <p>Nothing on this page leaves your browser. Clearing the extension's storage or removing the extension deletes it.</p>
+  </footer>
+
+  <template id="work-template">
+    <article class="entry-card">
+      <div class="entry-head">
+        <strong class="entry-title">New job</strong>
+        <button class="ghost danger" data-remove type="button">Remove</button>
+      </div>
+      <div class="grid">
+        <label>Job title<input data-field="title" type="text"></label>
+        <label>Company<input data-field="company" type="text"></label>
+        <label>Location<input data-field="location" type="text" placeholder="Chicago, IL"></label>
+        <label class="toggle inline"><input data-field="current" type="checkbox"><span>I currently work here</span></label>
+        <label>Start month<input data-field="startMonth" type="number" min="1" max="12" placeholder="6"></label>
+        <label>Start year<input data-field="startYear" type="number" min="1950" max="2100" placeholder="2026"></label>
+        <label>End month<input data-field="endMonth" type="number" min="1" max="12" placeholder="8"></label>
+        <label>End year<input data-field="endYear" type="number" min="1950" max="2100" placeholder="2026"></label>
+        <label class="span-2">Description<textarea data-field="description" rows="4"></textarea></label>
+      </div>
+    </article>
+  </template>
+
+  <template id="education-template">
+    <article class="entry-card">
+      <div class="entry-head">
+        <strong class="entry-title">New school</strong>
+        <button class="ghost danger" data-remove type="button">Remove</button>
+      </div>
+      <div class="grid">
+        <label class="span-2">School<input data-field="school" type="text"></label>
+        <label>Degree
+          <select data-field="degree">
+            <option value=""></option>
+            <option>High School Diploma</option>
+            <option>Associate's Degree</option>
+            <option>Bachelor's Degree</option>
+            <option>Master's Degree</option>
+            <option>Doctorate</option>
+          </select>
+        </label>
+        <label>Field of study<input data-field="fieldOfStudy" type="text" placeholder="Computer Science"></label>
+        <label>GPA<input data-field="gpa" type="text" placeholder="3.8"></label>
+        <label>Start year<input data-field="startYear" type="number" min="1950" max="2100"></label>
+        <label>End year<input data-field="endYear" type="number" min="1950" max="2100"></label>
+      </div>
+    </article>
+  </template>
+
+  <script src="schema.js"></script>
+  <script src="editor.js"></script>
+</body>
+</html>

@@ -1,10 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "JME Resume Tailor",
-  "version": "0.3.0",
-  "description": "Tailor Adil's verified resume to the job page open in the browser.",
+  "name": "JME Apply",
+  "version": "0.4.0",
+  "description": "Autofill Workday job applications from a profile stored on this device, and tailor Adil's verified resume to the job in the browser.",
   "action": {
-    "default_title": "Tailor resume for this job"
+    "default_title": "Autofill this application"
   },
   "background": {
     "service_worker": "service-worker.js"
@@ -12,13 +12,40 @@
   "side_panel": {
     "default_path": "sidepanel.html"
   },
+  "options_ui": {
+    "page": "profile/editor.html",
+    "open_in_tab": true
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.myworkdayjobs.com/*",
+        "https://*.myworkdaysite.com/*",
+        "https://*.workday.com/*"
+      ],
+      "js": [
+        "profile/schema.js",
+        "autofill/dom.js",
+        "autofill/widgets.js",
+        "autofill/fields.js",
+        "autofill/runner.js",
+        "autofill/content.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
   "permissions": [
     "activeTab",
     "scripting",
-    "sidePanel"
+    "sidePanel",
+    "storage",
+    "tabs"
   ],
   "host_permissions": [
     "http://127.0.0.1:8002/*",
-    "http://localhost:8002/*"
+    "http://localhost:8002/*",
+    "https://*.myworkdayjobs.com/*",
+    "https://*.myworkdaysite.com/*",
+    "https://*.workday.com/*"
   ]
 }
