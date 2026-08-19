@@ -67,4 +67,18 @@ def test_ai_provider_selection_keeps_secrets_in_the_local_backend() -> None:
     assert 'value="anthropic"' in html
     assert 'value="gemini"' in html
     assert 'value="kimi"' in html
-    assert '"version": "0.2.0"' in manifest
+    assert '"version": "0.3.0"' in manifest
+
+
+def test_extension_has_persistent_grounded_resume_chat() -> None:
+    panel = (ROOT / "sidepanel.js").read_text(encoding="utf-8")
+    html = (ROOT / "sidepanel.html").read_text(encoding="utf-8")
+    assert 'fetch(`${API}/resume/chat`' in panel
+    assert "chatMessages" in panel
+    assert "steering_prompt:" in panel
+    assert "localStorage.getItem(STEERING_PROMPT_KEY)" in panel
+    assert "localStorage.setItem(STEERING_PROMPT_KEY" in panel
+    assert 'id="steering-prompt"' in html
+    assert 'id="chat-form"' in html
+    assert "jme/resume/profile.json" in html
+    assert "authorization" not in panel.lower()

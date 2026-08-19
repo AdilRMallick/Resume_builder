@@ -9,6 +9,11 @@ The engine always starts by selecting and reordering bullets from
 local backend for evidence-linked rewrites, validate them, and fall back to verified
 mode on provider or validation failure. The extension never stores or receives API keys.
 
+The **Always follow these instructions** field is saved locally in the extension and
+steers every build. After generating a resume with an available AI provider, use the
+embedded chat to request another rewrite, removal, or reprioritization. Each turn rebuilds
+from `jme/resume/profile.json`; the browser cannot add claims to the evidence bank.
+
 ## Install locally
 
 1. Start the application with `jme serve start --port 8002`.
