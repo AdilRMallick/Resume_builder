@@ -28,6 +28,13 @@ the rest is optional and can be added as you go. If the backend is running,
 Attach a resume file in the same editor, or compile one on the Tailor tab and press
 **Use this PDF for autofill uploads**.
 
+## Revising a resume
+
+On the Tailor tab, **Always follow these instructions** is saved locally in the extension
+and steers every build. After generating a resume with an available AI provider, use the
+embedded chat to request another rewrite, removal, or reprioritization. Each turn rebuilds
+from `jme/resume/profile.json`; the browser cannot add claims to the evidence bank.
+
 ## Filling an application
 
 Open a Workday application and press **Fill this page**, either in the side panel or with

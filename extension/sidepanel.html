@@ -98,6 +98,11 @@
           <label>Company<input id="job-company" type="text" placeholder="Company"></label>
         </div>
 
+        <label class="steering-field" for="steering-prompt">Always follow these instructions
+          <textarea id="steering-prompt" rows="3" maxlength="4000" placeholder="Example: Favor concise cloud-platform impact, lead with measurable outcomes, and keep bullets under two lines."></textarea>
+        </label>
+        <p class="provider-note">Saved in this extension and applied to every build and chat revision.</p>
+
         <label class="provider-field" for="customization-mode">Customization
           <select id="customization-mode">
             <option value="verified">Verified selection · no AI</option>
@@ -129,6 +134,23 @@
           <article class="resume" id="resume" contenteditable="true" aria-label="Editable tailored resume"></article>
         </div>
         <p class="edit-note" id="edit-note">Click any text to make final edits.</p>
+        <section class="resume-chat" aria-labelledby="chat-heading">
+          <div class="chat-heading">
+            <div>
+              <p class="eyebrow">Revise with AI</p>
+              <h3 id="chat-heading">Ask for a change</h3>
+            </div>
+            <span id="chat-provider">Choose an AI provider</span>
+          </div>
+          <div class="chat-thread" id="chat-thread" role="log" aria-live="polite">
+            <p class="chat-empty">Build a resume with an AI provider, then ask for changes such as “make the cloud bullets more concise” or “remove the least relevant project bullet.”</p>
+          </div>
+          <form class="chat-form" id="chat-form">
+            <textarea id="chat-message" rows="3" maxlength="2000" placeholder="Tell the AI what to change..." disabled></textarea>
+            <button id="send-chat" type="submit" disabled>Send revision</button>
+          </form>
+          <p class="chat-note">Every turn rebuilds from the local <code>jme/resume/profile.json</code> evidence bank. Unsupported claims are rejected automatically.</p>
+        </section>
         <div class="result-actions">
           <button id="copy" type="button">Copy text</button>
           <button id="download" type="button">Download .tex</button>

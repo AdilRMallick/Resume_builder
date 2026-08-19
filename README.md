@@ -58,9 +58,13 @@ an online LaTeX service.
 1. Open a job listing.
 2. Click **JME Resume Tailor** to open its side panel.
 3. Click **Use current job page**, or paste/upload the job description.
-4. Leave **Verified selection** selected, or choose a configured AI provider.
-5. Click **Build tailored resume**.
-6. Review the real compiled PDF, then copy its text or download the `.tex` or `.pdf` file.
+4. Optionally enter a standing prompt under **Always follow these instructions**. It is
+   saved in the extension and reused automatically for every future resume.
+5. Leave **Verified selection** selected, or choose a configured AI provider.
+6. Click **Build tailored resume**.
+7. With an AI provider selected, use **Ask for a change** below the preview for iterative
+   rewrites, removals, or reprioritization. Each reply recompiles the PDF.
+8. Review the real compiled PDF, then copy its text or download the `.tex` or `.pdf` file.
 
 Verified mode works immediately and never calls an AI provider. To enable AI rewriting,
 open `.env`, add exactly one key, save the file, stop the server with `Ctrl+C`, and run

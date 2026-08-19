@@ -43,6 +43,8 @@ from jme.api.schemas import (
     PostingSummary,
     QueueStatus,
     RequirementOut,
+    ResumeChatOut,
+    ResumeChatRequest,
     ResumeProfileOut,
     ResumeProvidersOut,
     ShortlistItem,
@@ -66,7 +68,7 @@ from jme.logging import get_logger
 from jme.report.digest import build_digest_report, digest_report_to_dict
 from jme.report.gap import build_gap_report
 from jme.report.render import gap_report_to_dict
-from jme.resume.ai import AIRewriteError, customize_with_ai, provider_catalog
+from jme.resume.ai import AIRewriteError, customize_with_ai, provider_catalog, revise_with_ai
 from jme.resume.pdf import PDFRenderError, compile_one_page_resume
 from jme.resume.tailor import load_profile, tailor_profile
 
@@ -92,6 +94,27 @@ def create_app() -> FastAPI:
         version="0.1.0",
         description="Read-only view over the postings, requirements, matches, and gap report.",
     )
+
+    def attach_resume_pdf(result: dict[str, Any], *, requested: bool) -> dict[str, Any]:
+        if not requested:
+            return result
+        settings = get_settings()
+        try:
+            result, pdf, omitted = compile_one_page_resume(
+                result,
+                configured_path=settings.resume_tectonic_path,
+                timeout_sec=settings.resume_pdf_timeout_sec,
+            )
+            result["pdf_base64"] = base64.b64encode(pdf.data).decode("ascii")
+            result["pdf_error"] = None
+            result["pdf_pages"] = pdf.pages
+            result["pdf_omitted_bullets"] = omitted
+        except PDFRenderError as exc:
+            log.warning("resume_pdf_fallback", error=str(exc))
+            result["pdf_base64"] = None
+            result["pdf_error"] = str(exc)
+            result["pdf_pages"] = None
+        return result
 
     # ----------------------------------------------------------------------------------
     # dashboard
@@ -140,7 +163,7 @@ def create_app() -> FastAPI:
             raise HTTPException(status_code=500, detail="resume profile is unavailable") from exc
         result = tailor_profile(
             profile,
-            job_description=request.job_description,
+            job_description=f"{request.job_description}\n{request.steering_prompt}",
             title=request.title,
             company=request.company,
             url=request.url,
@@ -151,6 +174,7 @@ def create_app() -> FastAPI:
                     result,
                     job_description=request.job_description,
                     provider=request.customization_mode,
+                    steering_prompt=request.steering_prompt,
                 )
             except AIRewriteError as exc:
                 log.warning(
@@ -167,24 +191,51 @@ def create_app() -> FastAPI:
                     "rejected_rewrites": 0,
                     "warning": f"AI unavailable; used verified-only tailoring. {exc}",
                 }
-        if request.render_pdf:
-            settings = get_settings()
-            try:
-                result, pdf, omitted = compile_one_page_resume(
-                    result,
-                    configured_path=settings.resume_tectonic_path,
-                    timeout_sec=settings.resume_pdf_timeout_sec,
-                )
-                result["pdf_base64"] = base64.b64encode(pdf.data).decode("ascii")
-                result["pdf_error"] = None
-                result["pdf_pages"] = pdf.pages
-                result["pdf_omitted_bullets"] = omitted
-            except PDFRenderError as exc:
-                log.warning("resume_pdf_fallback", error=str(exc))
-                result["pdf_base64"] = None
-                result["pdf_error"] = str(exc)
-                result["pdf_pages"] = None
+        result = attach_resume_pdf(result, requested=request.render_pdf)
         return TailoredResumeOut.model_validate(result)
+
+    @app.post("/resume/chat", response_model=ResumeChatOut)
+    def chat_resume(request: ResumeChatRequest) -> ResumeChatOut:
+        """Rebuild and revise a resume from verified evidence and chat instructions."""
+        try:
+            profile = load_profile(RESUME_PROFILE)
+        except (OSError, json.JSONDecodeError) as exc:
+            log.error("resume_profile_unavailable", path=str(RESUME_PROFILE), error=str(exc))
+            raise HTTPException(status_code=500, detail="resume profile is unavailable") from exc
+        result = tailor_profile(
+            profile,
+            job_description=f"{request.job_description}\n{request.steering_prompt}",
+            title=request.title,
+            company=request.company,
+            url=request.url,
+        )
+        try:
+            result = revise_with_ai(
+                result,
+                job_description=request.job_description,
+                provider=request.provider,
+                messages=[message.model_dump() for message in request.messages],
+                steering_prompt=request.steering_prompt,
+            )
+        except AIRewriteError as exc:
+            log.warning("resume_chat_fallback", provider=request.provider, error=str(exc))
+            result["customization"] = {
+                "requested_mode": request.provider,
+                "applied_mode": "verified",
+                "provider": request.provider,
+                "model": None,
+                "rewritten_bullets": 0,
+                "rejected_rewrites": 0,
+                "warning": f"AI chat unavailable; rebuilt verified-only output. {exc}",
+            }
+            result["chat_reply"] = (
+                "I couldn't apply that revision because the selected AI provider is unavailable. "
+                "Your verified resume is unchanged."
+            )
+            result["chat_removed_bullets"] = 0
+            result["chat_prioritized_bullets"] = 0
+        result = attach_resume_pdf(result, requested=request.render_pdf)
+        return ResumeChatOut.model_validate(result)
 
     # ----------------------------------------------------------------------------------
     # health

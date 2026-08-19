@@ -3,7 +3,13 @@ from __future__ import annotations
 import json
 
 from jme.config import Settings
-from jme.resume.ai import _gemini_call, _kimi_call, customize_with_ai, provider_catalog
+from jme.resume.ai import (
+    _gemini_call,
+    _kimi_call,
+    customize_with_ai,
+    provider_catalog,
+    revise_with_ai,
+)
 from jme.resume.tailor import load_profile, tailor_profile
 
 
@@ -100,6 +106,58 @@ def test_ai_rejects_new_metrics_unverified_keywords_and_target_leaks() -> None:
     assert result["customization"]["warning"]
 
 
+def test_chat_applies_grounded_revisions_and_returns_an_explanation() -> None:
+    def fake_call(provider, system, user, schema, settings):
+        request = json.loads(user)
+        assert provider == "gemini"
+        assert "short chat" in system
+        assert request["standing_instructions"] == "Keep every bullet concise."
+        assert request["conversation"][-1]["content"] == "Emphasize the cloud work."
+        evidence = request["source_bullets"]
+        source = next(item for item in evidence if item["text"].startswith("Architected"))
+        removable = next(
+            item
+            for item in evidence
+            if item["source_id"].split(":")[:2] == source["source_id"].split(":")[:2]
+            and item["source_id"] != source["source_id"]
+        )
+        return {
+            "assistant_message": "I emphasized the verified cloud architecture and removed one lower-priority bullet.",
+            "rewrites": [
+                {
+                    "source_id": source["source_id"],
+                    "text": (
+                        "Built a containerized FastAPI inference service with Python and Docker, "
+                        "separating GPU-based satellite imagery segmentation from a Kubernetes-"
+                        "orchestrated ML pipeline and reducing model validation cycles from hours "
+                        "to minutes."
+                    ),
+                    "keywords_used": ["python", "docker", "kubernetes"],
+                }
+            ],
+            "remove_source_ids": [removable["source_id"]],
+            "prioritize_source_ids": [],
+        }, "test-gemini"
+
+    result = revise_with_ai(
+        _tailored(),
+        job_description="Python FastAPI Docker Kubernetes AWS " * 8,
+        provider="gemini",
+        messages=[{"role": "user", "content": "Emphasize the cloud work."}],
+        steering_prompt="Keep every bullet concise.",
+        settings=Settings(GEMINI_API_KEY="test"),
+        call_provider=fake_call,
+    )
+
+    assert result["customization"]["applied_mode"] == "ai"
+    assert result["customization"]["rewritten_bullets"] == 1
+    assert result["chat_removed_bullets"] == 1
+    assert "rewrote 1 verified bullet" in result["chat_reply"]
+    assert "removed 1 bullet" in result["chat_reply"]
+    assert "Chat revisions are limited" in result["source_rule"]
+    assert "Tailored for" not in result["latex"]
+
+
 def test_provider_catalog_reports_readiness_without_returning_secrets() -> None:
     providers = provider_catalog(
         Settings(
@@ -134,8 +192,8 @@ class _FakeResponse:
 def test_gemini_uses_backend_key_and_json_schema(monkeypatch) -> None:
     captured = {}
 
-    def fake_post(url, *, headers, json, timeout):
-        captured.update(url=url, headers=headers, body=json, timeout=timeout)
+    def fake_post(url, *, headers, json, timeout, verify):
+        captured.update(url=url, headers=headers, body=json, timeout=timeout, verify=verify)
         return _FakeResponse(
             {
                 "candidates": [
@@ -157,6 +215,7 @@ def test_gemini_uses_backend_key_and_json_schema(monkeypatch) -> None:
     assert payload == {"rewrites": []}
     assert model == "gemini-3.6-flash"
     assert captured["headers"]["x-goog-api-key"] == "gemini-secret"
+    assert captured["verify"].verify_mode.name == "CERT_REQUIRED"
     assert captured["body"]["generationConfig"]["responseMimeType"] == "application/json"
     assert captured["body"]["generationConfig"]["responseJsonSchema"] == {
         "type": "object"
@@ -166,8 +225,8 @@ def test_gemini_uses_backend_key_and_json_schema(monkeypatch) -> None:
 def test_kimi_uses_moonshot_backend_key_and_structured_output(monkeypatch) -> None:
     captured = {}
 
-    def fake_post(url, *, headers, json, timeout):
-        captured.update(url=url, headers=headers, body=json, timeout=timeout)
+    def fake_post(url, *, headers, json, timeout, verify):
+        captured.update(url=url, headers=headers, body=json, timeout=timeout, verify=verify)
         return _FakeResponse(
             {
                 "choices": [
@@ -190,5 +249,6 @@ def test_kimi_uses_moonshot_backend_key_and_structured_output(monkeypatch) -> No
     assert model == "kimi-k2.6"
     assert captured["url"] == "https://api.moonshot.ai/v1/chat/completions"
     assert captured["headers"]["authorization"] == "Bearer kimi-secret"
+    assert captured["verify"].verify_mode.name == "CERT_REQUIRED"
     assert captured["body"]["response_format"]["type"] == "json_schema"
     assert captured["body"]["thinking"] == {"type": "disabled"}

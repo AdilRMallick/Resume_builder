@@ -4,9 +4,9 @@ These are the wire contract. ORM objects are never returned directly: the models
 columns the UI has no business seeing (raw feed JSON, whole JD bodies) and their shape
 changes for reasons that have nothing to do with the API.
 
-Most models are response contracts. `TailorResumeRequest` is the one request body: it
-drives a stateless local computation and is never persisted. ARCHITECTURE section 10
-still rules out multi-user hosting, auth, and remote writes.
+Most models are response contracts. The resume request bodies drive stateless local
+computations and are never persisted. ARCHITECTURE section 10 still rules out multi-user
+hosting, auth, and remote writes.
 """
 
 from __future__ import annotations
@@ -288,10 +288,27 @@ class TailorResumeRequest(BaseModel):
     title: str = Field(default="", max_length=512)
     company: str = Field(default="", max_length=512)
     url: str = Field(default="", max_length=4096)
+    steering_prompt: str = Field(default="", max_length=4000)
     render_pdf: bool = False
     customization_mode: Literal[
         "verified", "openai", "anthropic", "gemini", "kimi"
     ] = "verified"
+
+
+class ResumeChatMessage(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str = Field(min_length=1, max_length=2000)
+
+
+class ResumeChatRequest(BaseModel):
+    job_description: str = Field(min_length=50, max_length=100_000)
+    title: str = Field(default="", max_length=512)
+    company: str = Field(default="", max_length=512)
+    url: str = Field(default="", max_length=4096)
+    steering_prompt: str = Field(default="", max_length=4000)
+    provider: Literal["openai", "anthropic", "gemini", "kimi"]
+    messages: list[ResumeChatMessage] = Field(min_length=1, max_length=12)
+    render_pdf: bool = True
 
 
 class ResumeTargetOut(BaseModel):
@@ -335,6 +352,12 @@ class TailoredResumeOut(ResumeProfileOut):
     pdf_error: str | None = None
     pdf_pages: int | None = None
     pdf_omitted_bullets: int = 0
+
+
+class ResumeChatOut(TailoredResumeOut):
+    chat_reply: str
+    chat_removed_bullets: int = 0
+    chat_prioritized_bullets: int = 0
 
 
 # --------------------------------------------------------------------------------------

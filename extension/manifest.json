@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "JME Apply",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Autofill Workday job applications from a profile stored on this device, and tailor Adil's verified resume to the job in the browser.",
   "action": {
     "default_title": "Autofill this application"

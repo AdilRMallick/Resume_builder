@@ -129,6 +129,42 @@ def test_resume_provider_status_never_exposes_keys(client, monkeypatch) -> None:
     assert "do-not-return-me" not in response.text
 
 
+def test_resume_chat_rebuilds_from_verified_profile_and_applies_standing_prompt(
+    client, monkeypatch
+) -> None:
+    captured = {}
+
+    def fake_revise(result, **kwargs):
+        captured.update(kwargs)
+        result["chat_reply"] = "I made the requested evidence-grounded change."
+        result["chat_removed_bullets"] = 1
+        result["chat_prioritized_bullets"] = 0
+        return result
+
+    monkeypatch.setattr("jme.api.app.revise_with_ai", fake_revise)
+    response = client.post(
+        "/resume/chat",
+        json={
+            "job_description": "Python FastAPI Redis PostgreSQL Docker AWS " * 8,
+            "title": "Cloud Engineer",
+            "company": "Example",
+            "steering_prompt": "Always lead with quantified cloud impact.",
+            "provider": "gemini",
+            "messages": [{"role": "user", "content": "Make the first bullet shorter."}],
+            "render_pdf": False,
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["chat_removed_bullets"] == 1
+    assert body["chat_reply"].startswith("I made")
+    assert captured["provider"] == "gemini"
+    assert captured["steering_prompt"] == "Always lead with quantified cloud impact."
+    assert captured["messages"][-1]["role"] == "user"
+    assert "Tailored for" not in body["latex"]
+
+
 @pytest.mark.parametrize("mode", ["openai", "anthropic", "gemini", "kimi"])
 def test_resume_ai_failure_falls_back_to_verified_output(
     client, monkeypatch, mode
@@ -406,8 +442,8 @@ def test_ops_queue_degrades_gracefully_when_redis_is_unreachable(client, monkeyp
     assert client.get("/health").status_code == 200
 
 
-def test_only_stateless_resume_tailoring_accepts_a_post(client) -> None:
-    """The extension's compute-only route is the sole non-read verb."""
+def test_only_stateless_resume_workflows_accept_posts(client) -> None:
+    """The extension's compute-only routes are the sole non-read verbs."""
     from jme.api.app import app as real_app
 
     non_read_routes = {}
@@ -416,5 +452,9 @@ def test_only_stateless_resume_tailoring_accepts_a_post(client) -> None:
         non_read = methods & {"POST", "PUT", "PATCH", "DELETE"}
         if non_read:
             non_read_routes[route.path] = non_read
-    assert non_read_routes == {"/resume/tailor": {"POST"}}
+    assert non_read_routes == {
+        "/resume/tailor": {"POST"},
+        "/resume/chat": {"POST"},
+    }
     assert client.get("/resume/tailor").status_code == 405
+    assert client.get("/resume/chat").status_code == 405
