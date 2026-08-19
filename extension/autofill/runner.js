@@ -289,7 +289,14 @@
    * and the in-page button can render the same result.
    */
   async function run(profile, settings = {}) {
-    const report = { step: detectStep(), filled: [], skipped: [], notFound: [], warnings: [] };
+    const report = {
+      step: detectStep(),
+      host: location.hostname,
+      filled: [],
+      skipped: [],
+      notFound: [],
+      warnings: [],
+    };
     if (!isWorkdayApplication()) {
       report.warnings.push("This page does not look like a Workday application form.");
       return report;

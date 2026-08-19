@@ -141,6 +141,10 @@ code { font-family: ui-monospace, monospace; }
 .report-details summary { color: var(--muted); cursor: pointer; font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; }
 .report-details[open] summary { margin-bottom: 6px; }
 
+.report-hint { margin: 7px 0 0; color: var(--muted); font-size: 8px; }
+.report-copy { width: 100%; min-height: 32px; margin-top: 10px; border: 1px solid var(--line-strong); border-radius: 8px; color: var(--text); background: var(--bg); cursor: pointer; font-size: 9px; }
+.report-copy:hover { border-color: var(--accent); }
+
 .profile-summary { padding: 11px; border: 1px solid var(--line); border-radius: 10px; color: var(--muted); background: var(--bg); font-size: 10px; }
 .profile-summary strong { color: var(--text); }
 

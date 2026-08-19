@@ -18,6 +18,7 @@ const EXTENSION = path.join(__dirname, "..", "..", "extension");
 // in order in this process is exactly what the browser does with the manifest's js list.
 for (const file of [
   "profile/schema.js",
+  "report.js",
   "autofill/dom.js",
   "autofill/widgets.js",
   "autofill/fields.js",
@@ -26,7 +27,7 @@ for (const file of [
   vm.runInThisContext(fs.readFileSync(path.join(EXTENSION, file), "utf8"), { filename: file });
 }
 
-const { JMEProfile, JMEAutofill } = globalThis;
+const { JMEProfile, JMEAutofill, JMEReport } = globalThis;
 const tests = [];
 const test = (name, body) => tests.push([name, body]);
 
@@ -224,6 +225,56 @@ test("an end date is skipped for a job marked current", () => {
     month: "8",
     year: "2026",
   });
+});
+
+// ------------------------------------------------------------------------------------
+// diagnostic report
+// ------------------------------------------------------------------------------------
+
+const SAMPLE_REPORT = {
+  step: "My Information",
+  host: "acme.wd1.myworkdayjobs.com",
+  filled: [
+    { field: "firstName", detail: "Adil" },
+    { field: "email", detail: "mallick9@msu.edu" },
+    { field: "address1", detail: "123 Grand River Ave" },
+  ],
+  skipped: [{ field: "state", reason: 'no option matching "Michigan" among 47' }],
+  notFound: ["phoneCountryCode", "howHeard"],
+  warnings: ["Work experience: filled 1 of 3 entries."],
+};
+
+test("the diagnostic names every field, in the section that explains it", () => {
+  const text = JMEReport.buildDiagnostic(SAMPLE_REPORT);
+  assert.ok(text.includes("acme.wd1.myworkdayjobs.com"), "the tenant has to be identifiable");
+  assert.ok(text.includes("My Information"));
+  assert.ok(text.includes("3 filled · 1 skipped · 2 not found"));
+  for (const field of ["firstName", "email", "address1", "state", "phoneCountryCode", "howHeard"]) {
+    assert.ok(text.includes(field), `${field} missing from the report`);
+  }
+  assert.ok(text.includes('no option matching "Michigan" among 47'), "skip reasons are the diagnostic");
+  assert.ok(text.includes("filled 1 of 3 entries"), "warnings carry through");
+});
+
+test("the diagnostic never carries the values that were typed in", () => {
+  const text = JMEReport.buildDiagnostic(SAMPLE_REPORT);
+  for (const value of ["Adil", "mallick9@msu.edu", "123 Grand River Ave"]) {
+    assert.ok(!text.includes(value), `the report leaked a filled value: ${value}`);
+  }
+});
+
+test("an empty report still renders without throwing", () => {
+  const text = JMEReport.buildDiagnostic({
+    step: "Review",
+    host: "acme.wd1.myworkdayjobs.com",
+    filled: [],
+    skipped: [],
+    notFound: [],
+    warnings: [],
+  });
+  assert.ok(text.includes("0 filled · 0 skipped · 0 not found"));
+  assert.ok(text.includes("(nothing)"));
+  assert.equal(JMEReport.buildDiagnostic(null), "");
 });
 
 // ------------------------------------------------------------------------------------

@@ -43,6 +43,19 @@ it filled, what it skipped, and why.
 
 It never presses Next and never submits. Review each page yourself.
 
+The report separates two different failures, because they need different fixes:
+
+- **Left for you** — a control was found and nothing was typed. Usually an option the
+  tenant does not offer, or a value the form already had.
+- **Not found on this page** — no control matched that profile field at all. Normal on a
+  step that does not ask for it; a sign the field spec needs tuning if the page plainly
+  has the field.
+
+**Copy diagnostic report** puts the whole thing on the clipboard as plain text: the
+tenant host, the step, and every field name, skip reason, and warning. It deliberately
+omits the values that were filled in, so the report can be shared without carrying your
+name, address, or contact details along with it.
+
 Two behaviours are off by default and live in the profile editor:
 
 - **Voluntary disclosures** (gender, race, veteran status, disability). Optional on every
@@ -71,6 +84,7 @@ never enter Chrome.
 | `autofill/fields.js` | What each field means and how to recognise it, plus the resolver |
 | `autofill/runner.js` | Step detection, repeating sections, and the fill report |
 | `autofill/content.js` | The floating button and the side panel's message endpoint |
+| `report.js` | Renders a fill report as shareable text, with filled values left out |
 
 Two things make Workday harder than an ordinary form. Its class names and element ids are
 generated per build, so the only stable hooks are `data-automation-id` attributes and a
