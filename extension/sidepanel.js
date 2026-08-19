@@ -22,6 +22,7 @@ let currentTailoredResume = null;
 let currentPdfUrl = "";
 let currentPdfBase64 = "";
 let profile = null;
+let lastReport = null;
 let chatMessages = [];
 let chatProvider = "verified";
 
@@ -211,9 +212,11 @@ function renderReport(report) {
   const container = byId("fill-report");
   if (!report || report.error) {
     container.hidden = true;
+    lastReport = null;
     setFillStatus(report?.error || "The page did not respond.", true);
     return;
   }
+  lastReport = report;
   container.hidden = false;
   byId("report-step").textContent = report.step;
   byId("report-count").textContent = `${report.filled.length} filled`;
@@ -229,12 +232,23 @@ function renderReport(report) {
   byId("report-issues").hidden = !issues.length;
   byId("report-skipped").innerHTML = issues.map((line) => `<li>${escapeHTML(line)}</li>`).join("");
 
+  byId("report-unmatched").hidden = !report.notFound.length;
+  byId("report-notfound").innerHTML = report.notFound
+    .map((field) => `<li>${escapeHTML(field)}</li>`)
+    .join("");
+
   setFillStatus(
     report.filled.length
       ? `${report.filled.length} field${report.filled.length === 1 ? "" : "s"} filled on ${report.step}. Review, then press Next yourself.`
       : "No matching fields here. Move to the next step and fill again."
   );
 }
+
+byId("copy-report").addEventListener("click", async () => {
+  if (!lastReport) return;
+  await navigator.clipboard.writeText(JMEReport.buildDiagnostic(lastReport));
+  setFillStatus("Diagnostic copied. It lists field names and reasons, never the values filled in.");
+});
 
 // ------------------------------------------------------------------------------------
 // resume tailoring

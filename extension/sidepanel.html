@@ -49,6 +49,12 @@
             <summary>Left for you</summary>
             <ul class="report-list muted" id="report-skipped"></ul>
           </details>
+          <details class="report-details" id="report-unmatched" hidden>
+            <summary>Not found on this page</summary>
+            <ul class="report-list muted" id="report-notfound"></ul>
+            <p class="report-hint">Profile fields with no matching control here. Normal on a step that does not ask for them; worth reporting if the page plainly has the field.</p>
+          </details>
+          <button class="report-copy" id="copy-report" type="button">Copy diagnostic report</button>
           <p class="edit-note">Review every page before you press Next. This extension never submits.</p>
         </div>
 
@@ -163,6 +169,7 @@
 
   <footer><span class="lock" aria-hidden="true">&#9679;</span> Autofill runs in the page. Tailoring runs on your local backend. Provider keys never enter Chrome.</footer>
   <script src="profile/schema.js"></script>
+  <script src="report.js"></script>
   <script src="sidepanel.js"></script>
 </body>
 </html>

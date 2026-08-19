@@ -27,8 +27,11 @@ const ENGINE = ["profile/schema.js", "autofill/dom.js", "autofill/widgets.js", "
  * jsdom does no layout, so every rect is zero and the engine's visibility test would
  * reject the entire page; a stub rect is the one lie these fixtures tell.
  */
-function freshDocument() {
-  const { window } = new JSDOM("<!doctype html><html><body></body></html>", { pretendToBeVisual: true });
+function freshDocument(url = "about:blank") {
+  const { window } = new JSDOM("<!doctype html><html><body></body></html>", {
+    pretendToBeVisual: true,
+    url,
+  });
   window.Element.prototype.getBoundingClientRect = () => ({ width: 120, height: 30, top: 10, left: 10 });
   window.Element.prototype.scrollIntoView = function () {};
   if (!window.PointerEvent) window.PointerEvent = window.MouseEvent;
@@ -128,8 +131,10 @@ function wireNavigation(record) {
 const tests = [];
 const test = (name, body) => tests.push([name, body]);
 
+const TENANT = "https://acme.wd1.myworkdayjobs.com/en-US/careers/job/apply";
+
 test("My Information: names, contact, address, dropdowns, and the source typeahead", async () => {
-  freshDocument();
+  freshDocument(TENANT);
   document.body.innerHTML = `
     <h2 data-automation-id="pageHeader">My Information</h2>
     <div data-automation-id="legalNameSection"><h3>Legal Name</h3>
@@ -172,6 +177,8 @@ test("My Information: names, contact, address, dropdowns, and the source typeahe
   const report = await JMEAutofill.run(profile, profile.preferences);
 
   assert.equal(report.step, "My Information");
+  assert.equal(report.host, "acme.wd1.myworkdayjobs.com",
+    "the report names the tenant, so a diagnostic says which Workday it came from");
   assert.equal(at("legalNameSection_firstName").value, "Adil");
   assert.equal(at("legalNameSection_middleName").value, "R");
   assert.equal(at("legalNameSection_lastName").value, "Mallick");
@@ -191,7 +198,7 @@ test("My Information: names, contact, address, dropdowns, and the source typeahe
 });
 
 test("My Information: a field the form already filled is left alone unless overwriting", async () => {
-  freshDocument();
+  freshDocument(TENANT);
   document.body.innerHTML = `<h2 data-automation-id="pageHeader">My Information</h2>
     ${field("legalNameSection_firstName", "First Name")}
     ${field("email", "Email Address")}`;
@@ -211,7 +218,7 @@ test("My Information: a field the form already filled is left alone unless overw
 });
 
 test("My Experience: repeating panels, split dates, degree aliases, and skills", async () => {
-  freshDocument();
+  freshDocument(TENANT);
   const workPanel = (index) => `<div data-automation-id="workExperience-${index}" role="group">
     <div><label id="w${index}t">Job Title</label><input type="text" data-automation-id="jobTitle" aria-labelledby="w${index}t"></div>
     <div><label id="w${index}c">Company</label><input type="text" data-automation-id="company" aria-labelledby="w${index}c"></div>
@@ -306,7 +313,7 @@ test("My Experience: repeating panels, split dates, degree aliases, and skills",
 });
 
 test("My Experience: the engine reports when the form will not open enough panels", async () => {
-  freshDocument();
+  freshDocument(TENANT);
   document.body.innerHTML = `
     <h2 data-automation-id="pageHeader">My Experience</h2>
     <div data-automation-id="workExperienceSection"><h3>Work Experience</h3>
@@ -337,7 +344,7 @@ test("Voluntary Disclosures: skipped by default, filled only on opt-in", async (
     "I do not wish to answer",
   ];
   const build = () => {
-    freshDocument();
+    freshDocument(TENANT);
     document.body.innerHTML = `
       <h2 data-automation-id="pageHeader">Voluntary Disclosures</h2>
       <div><label id="lbl-gender">Gender</label>

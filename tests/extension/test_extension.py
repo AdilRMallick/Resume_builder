@@ -70,6 +70,7 @@ def test_extension_assets_are_local_and_present() -> None:
         "sidepanel.js",
         "sidepanel.css",
         "service-worker.js",
+        "report.js",
         "profile/editor.js",
         "profile/editor.css",
         *AUTOFILL_SCRIPTS,
