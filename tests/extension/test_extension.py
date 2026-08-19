@@ -108,8 +108,13 @@ def test_the_engine_never_submits_the_application() -> None:
 
 
 def run_node(script: str) -> None:
-    result = subprocess.run(  # noqa: S603 - fixed argv, no shell
-        ["node", str(Path(__file__).with_name(script))],  # noqa: S607 - node checked by the caller
+    """Run one of the JavaScript suites and surface its output on failure.
+
+    `check=False` with an explicit assert rather than `check=True`: a CalledProcessError
+    hides the runner's own report, and which assertion failed is the whole message.
+    """
+    result = subprocess.run(
+        ["node", str(Path(__file__).with_name(script))],
         capture_output=True,
         text=True,
         check=False,
