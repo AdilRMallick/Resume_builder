@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>JME Resume Tailor</title>
+  <title>JME Apply</title>
   <link rel="stylesheet" href="sidepanel.css">
 </head>
 <body>
@@ -11,78 +11,136 @@
     <div class="brand-mark" aria-hidden="true">JM</div>
     <div>
       <p class="eyebrow">Local career intelligence</p>
-      <h1>Resume Tailor</h1>
+      <h1>Apply</h1>
     </div>
     <span class="server-state" id="server-state"><i></i><span>Checking</span></span>
   </header>
 
+  <nav class="tabs" role="tablist">
+    <button class="tab is-active" id="tab-autofill" type="button" role="tab" aria-controls="view-autofill" aria-selected="true">Autofill</button>
+    <button class="tab" id="tab-tailor" type="button" role="tab" aria-controls="view-tailor" aria-selected="false">Tailor</button>
+  </nav>
+
   <main>
-    <section class="intro">
-      <h2>Make this job-specific.</h2>
-      <p>Pull the description from your current page or paste one below. AI is optional and always runs through your local backend.</p>
-    </section>
-
-    <section class="source-card">
-      <button class="page-button" id="use-page" type="button">
-        <span class="button-icon" aria-hidden="true">&#8595;</span>
-        <span><strong>Use current job page</strong><small>Extract the visible description automatically</small></span>
-      </button>
-
-      <div class="divider"><span>or paste / upload</span></div>
-
-      <label for="job-description">Job description</label>
-      <textarea id="job-description" rows="9" placeholder="Paste the complete job description here..."></textarea>
-      <div class="upload-row">
-        <label class="upload-button" for="job-file">Upload text file</label>
-        <input id="job-file" type="file" accept=".txt,.md,.html,.htm,text/plain,text/markdown,text/html">
-        <span id="character-count">0 characters</span>
+    <section class="view" id="view-autofill" role="tabpanel" aria-labelledby="tab-autofill">
+      <div class="intro">
+        <h2>Fill this application.</h2>
+        <p>Your details stay on this device. Nothing is submitted for you.</p>
       </div>
 
-      <div class="target-grid">
-        <label>Role title<input id="job-title" type="text" placeholder="Software Engineer"></label>
-        <label>Company<input id="job-company" type="text" placeholder="Company"></label>
-      </div>
-
-      <label class="provider-field" for="customization-mode">Customization
-        <select id="customization-mode">
-          <option value="verified">Verified selection · no AI</option>
-          <option value="openai" disabled>AI rewrite · OpenAI (key not configured)</option>
-          <option value="anthropic" disabled>AI rewrite · Claude (key not configured)</option>
-          <option value="gemini" disabled>AI rewrite · Gemini (key not configured)</option>
-          <option value="kimi" disabled>AI rewrite · Kimi (key not configured)</option>
-        </select>
-      </label>
-      <p class="provider-note" id="provider-note">Verified mode works without an API key.</p>
-
-      <button class="primary-button" id="tailor" type="button" disabled>
-        <span>Build tailored resume</span><span aria-hidden="true">&#8594;</span>
-      </button>
-      <p class="status-copy" id="status-copy" role="status">Start the local Job Match Engine to connect.</p>
-    </section>
-
-    <section class="result" id="result" hidden>
-      <div class="result-heading">
-        <div>
-          <p class="eyebrow">Verified output</p>
-          <h2>Your tailored resume</h2>
+      <section class="source-card">
+        <div class="page-state" id="page-state">
+          <span class="page-dot" id="page-dot" aria-hidden="true"></span>
+          <span id="page-label">Checking the current tab...</span>
         </div>
-        <span class="truth-badge" id="truth-badge">Verified selection</span>
+
+        <button class="primary-button" id="fill" type="button" disabled>
+          <span>Fill this page</span><span aria-hidden="true">&#8594;</span>
+        </button>
+        <p class="status-copy" id="fill-status" role="status">Open a Workday application to begin.</p>
+
+        <div class="fill-report" id="fill-report" hidden>
+          <div class="report-heading">
+            <p class="eyebrow" id="report-step">Result</p>
+            <span class="truth-badge" id="report-count">0 filled</span>
+          </div>
+          <ul class="report-list" id="report-filled"></ul>
+          <details class="report-details" id="report-issues" hidden>
+            <summary>Left for you</summary>
+            <ul class="report-list muted" id="report-skipped"></ul>
+          </details>
+          <p class="edit-note">Review every page before you press Next. This extension never submits.</p>
+        </div>
+
+        <div class="divider"><span>your profile</span></div>
+
+        <div class="profile-summary" id="profile-summary">No profile saved yet.</div>
+        <div class="result-actions">
+          <button id="edit-profile" type="button">Edit profile</button>
+          <button id="seed-profile" type="button">Import from resume</button>
+        </div>
+
+        <label class="toggle" for="overwrite-toggle">
+          <input id="overwrite-toggle" type="checkbox">
+          <span>Overwrite fields that already have a value</span>
+        </label>
+        <label class="toggle" for="voluntary-toggle">
+          <input id="voluntary-toggle" type="checkbox">
+          <span>Answer voluntary disclosure questions (gender, race, veteran, disability)</span>
+        </label>
+      </section>
+    </section>
+
+    <section class="view" id="view-tailor" role="tabpanel" aria-labelledby="tab-tailor" hidden>
+      <div class="intro">
+        <h2>Make this job-specific.</h2>
+        <p>Pull the description from your current page or paste one below. AI is optional and always runs through your local backend.</p>
       </div>
-      <div class="match-chips" id="match-chips"></div>
-      <div class="resume-frame">
-        <iframe class="resume-pdf" id="resume-pdf" title="Compiled Jake-template PDF" hidden></iframe>
-        <article class="resume" id="resume" contenteditable="true" aria-label="Editable tailored resume"></article>
-      </div>
-      <p class="edit-note" id="edit-note">Click any text to make final edits.</p>
-      <div class="result-actions">
-        <button id="copy" type="button">Copy text</button>
-        <button id="download" type="button">Download .tex</button>
-        <button class="action-primary" id="download-pdf" type="button" disabled>Download exact PDF</button>
-      </div>
+
+      <section class="source-card">
+        <button class="page-button" id="use-page" type="button">
+          <span class="button-icon" aria-hidden="true">&#8595;</span>
+          <span><strong>Use current job page</strong><small>Extract the visible description automatically</small></span>
+        </button>
+
+        <div class="divider"><span>or paste / upload</span></div>
+
+        <label for="job-description">Job description</label>
+        <textarea id="job-description" rows="9" placeholder="Paste the complete job description here..."></textarea>
+        <div class="upload-row">
+          <label class="upload-button" for="job-file">Upload text file</label>
+          <input id="job-file" type="file" accept=".txt,.md,.html,.htm,text/plain,text/markdown,text/html">
+          <span id="character-count">0 characters</span>
+        </div>
+
+        <div class="target-grid">
+          <label>Role title<input id="job-title" type="text" placeholder="Software Engineer"></label>
+          <label>Company<input id="job-company" type="text" placeholder="Company"></label>
+        </div>
+
+        <label class="provider-field" for="customization-mode">Customization
+          <select id="customization-mode">
+            <option value="verified">Verified selection · no AI</option>
+            <option value="openai" disabled>AI rewrite · OpenAI (key not configured)</option>
+            <option value="anthropic" disabled>AI rewrite · Claude (key not configured)</option>
+            <option value="gemini" disabled>AI rewrite · Gemini (key not configured)</option>
+            <option value="kimi" disabled>AI rewrite · Kimi (key not configured)</option>
+          </select>
+        </label>
+        <p class="provider-note" id="provider-note">Verified mode works without an API key.</p>
+
+        <button class="primary-button" id="tailor" type="button" disabled>
+          <span>Build tailored resume</span><span aria-hidden="true">&#8594;</span>
+        </button>
+        <p class="status-copy" id="status-copy" role="status">Start the local Job Match Engine to connect.</p>
+      </section>
+
+      <section class="result" id="result" hidden>
+        <div class="result-heading">
+          <div>
+            <p class="eyebrow">Verified output</p>
+            <h2>Your tailored resume</h2>
+          </div>
+          <span class="truth-badge" id="truth-badge">Verified selection</span>
+        </div>
+        <div class="match-chips" id="match-chips"></div>
+        <div class="resume-frame">
+          <iframe class="resume-pdf" id="resume-pdf" title="Compiled Jake-template PDF" hidden></iframe>
+          <article class="resume" id="resume" contenteditable="true" aria-label="Editable tailored resume"></article>
+        </div>
+        <p class="edit-note" id="edit-note">Click any text to make final edits.</p>
+        <div class="result-actions">
+          <button id="copy" type="button">Copy text</button>
+          <button id="download" type="button">Download .tex</button>
+          <button id="download-pdf" type="button" disabled>Download exact PDF</button>
+          <button class="action-primary" id="use-for-autofill" type="button" disabled>Use this PDF for autofill uploads</button>
+        </div>
+      </section>
     </section>
   </main>
 
-  <footer><span class="lock" aria-hidden="true">&#9679;</span> Extension → local backend. Provider keys never enter Chrome.</footer>
+  <footer><span class="lock" aria-hidden="true">&#9679;</span> Autofill runs in the page. Tailoring runs on your local backend. Provider keys never enter Chrome.</footer>
+  <script src="profile/schema.js"></script>
   <script src="sidepanel.js"></script>
 </body>
 </html>

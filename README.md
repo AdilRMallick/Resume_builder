@@ -206,15 +206,70 @@ gap ranking without making another LLM call. Use `--format json` for automation 
 `--output daily.md` to write the Markdown digest. The same JSON contract is available
 at `GET /digest`.
 
-### Browser resume tailor
+### Browser extension
 
-`extension/` contains an unpacked Chrome/Edge side-panel extension. While a job listing
-is open, click **Use current job page** to capture its visible description, or paste or
-upload a text/Markdown/HTML description. The local API always selects relevant verified
-bullets from `jme/resume/profile.json`. You can keep that deterministic wording or ask
-OpenAI, Claude, Gemini, or Kimi to propose evidence-linked rewrites; numeric, keyword, source, and target-
-banner checks run before any rewrite is accepted. The result uses Jake's canonical LaTeX
-layout and is compiled locally into the PDF shown in the extension.
+`extension/` contains an unpacked Chrome/Edge extension with two halves: a **Workday
+autofill** engine that runs entirely in the browser, and the **resume tailor** that talks
+to the local API.
+
+#### Workday autofill
+
+Roughly half of a typical application pipeline runs through Workday, and each of those
+forms is twenty minutes of retyping the same work history into custom dropdowns,
+typeaheads, three-part date fields, and repeating panels that browser autofill cannot
+touch. The extension fills them from a profile you enter once.
+
+Your profile lives in `chrome.storage.local` and never leaves the device: the engine runs
+inside the Workday tab, and no file under `extension/autofill/` is allowed to make a
+network call — `tests/extension/test_extension.py` enforces that. There is no account, no
+license, and no fill limit.
+
+Open the side panel on a Workday application and press **Fill this page**, or use the
+floating button the extension puts in the page itself. It fills one step at a time and
+**never submits and never presses Next** — you review each page and advance it yourself.
+
+What it handles:
+
+| Widget | How |
+| --- | --- |
+| Text and textarea | Native value setter so React's change tracker fires |
+| Dropdowns | Opens the portal-rendered listbox, scores every option, clicks the best |
+| Multi-selects | Types each value, waits for the prompt options, clicks the match |
+| Dates | Fills the month/day/year spinbuttons, or a single `MM/DD/YYYY` input |
+| Repeating sections | Clicks Add until there are enough panels, then fills each in scope |
+| Resume upload | Attaches the stored file through a synthetic `DataTransfer` |
+
+Fields are found by `data-automation-id` first, then by accessible name, then by the
+surrounding group — tenants customise their Workday instances, so no single selector
+works everywhere. Anything it cannot match with confidence is reported back to you
+rather than guessed at.
+
+`tests/extension/dom_checks.js` drives the engine against synthetic Workday forms to keep
+that honest. It needs jsdom, so it is opt-in — `npm install` in `tests/extension` and
+`pytest tests/extension` picks it up. The rest of the extension suite runs unconditionally.
+
+Two behaviours are off by default, in **Edit profile**:
+
+- **Voluntary disclosures** (gender, race, veteran, disability). These are optional on
+  every application, so the extension leaves those pages blank until you fill in the
+  answers you want and turn them on.
+- **Overwrite existing values.** A value Workday parsed out of your uploaded resume is
+  usually more current than a stale profile entry, so filled fields are left alone.
+
+**Edit profile → Import from JME** seeds your work history, education, and skills from
+`jme/resume/profile.json`, so both halves of the extension draw on the same verified
+facts. It only fills blanks; anything you have already typed is kept.
+
+#### Resume tailor
+
+While a job listing is open, click **Use current job page** to capture its visible
+description, or paste or upload a text/Markdown/HTML description. The local API always
+selects relevant verified bullets from `jme/resume/profile.json`. You can keep that
+deterministic wording or ask OpenAI, Claude, Gemini, or Kimi to propose evidence-linked
+rewrites; numeric, keyword, source, and target-banner checks run before any rewrite is
+accepted. The result uses Jake's canonical LaTeX layout and is compiled locally into the
+PDF shown in the extension. **Use this PDF for autofill uploads** stores that compiled
+PDF as the file the autofill engine attaches on your next application.
 
 AI is optional. Put one provider key in `.env` and restart the API:
 
@@ -237,10 +292,12 @@ jme serve start --port 8002
 ```
 
 Then open `chrome://extensions` (or `edge://extensions`), enable Developer mode, choose
-**Load unpacked**, and select the repository's `extension/` directory. The extension has
-access only to the active tab after you click it and to the local API on port 8002. The
-extension never receives a provider key. Verified mode sends nothing externally; AI
-mode sends the job description and selected evidence to the provider you choose.
+**Load unpacked**, and select the repository's `extension/` directory. Autofill works
+without the backend running; only the tailor needs it.
+
+The extension can reach exactly two places: Workday application hosts, and the local API
+on port 8002. It never receives a provider key. Verified mode sends nothing externally;
+AI mode sends the job description and selected evidence to the provider you choose.
 
 ---
 
@@ -261,6 +318,11 @@ jme/                  Python services
   matcher/            LLM match with mandatory citations
   report/             the aggregate gap report
   api/                read-only FastAPI over Postgres
+
+extension/            unpacked Chrome/Edge extension
+  autofill/           Workday fill engine: DOM utils, widget drivers, field map, runner
+  profile/            profile schema and the editor page it is entered on
+  sidepanel.*         the panel: autofill controls and the resume tailor
 
 fetcher/              Go fetch service
   internal/domain/    types shared across the process boundary

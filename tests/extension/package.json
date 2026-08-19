@@ -1,0 +1,11 @@
+{
+  "name": "jme-extension-tests",
+  "private": true,
+  "description": "Optional DOM test suite for the browser extension's autofill engine. Run `npm install` here, then `node dom_checks.js` or `pytest tests/extension`.",
+  "scripts": {
+    "test": "node autofill_checks.js && node dom_checks.js"
+  },
+  "devDependencies": {
+    "jsdom": "^26.0.0"
+  }
+}

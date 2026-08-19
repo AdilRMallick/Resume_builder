@@ -1,6 +1,15 @@
 "use strict";
 
 const API = "http://127.0.0.1:8002";
+const AUTOFILL_SCRIPTS = [
+  "profile/schema.js",
+  "autofill/dom.js",
+  "autofill/widgets.js",
+  "autofill/fields.js",
+  "autofill/runner.js",
+  "autofill/content.js",
+];
+
 const byId = (id) => document.getElementById(id);
 const escapeHTML = (value) => String(value ?? "").replace(/[&<>"']/g, (character) =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[character])
@@ -10,6 +19,223 @@ let currentUrl = "";
 let serverReady = false;
 let currentTailoredResume = null;
 let currentPdfUrl = "";
+let currentPdfBase64 = "";
+let profile = null;
+
+// ------------------------------------------------------------------------------------
+// tabs
+// ------------------------------------------------------------------------------------
+
+function showView(name) {
+  for (const view of ["autofill", "tailor"]) {
+    const active = view === name;
+    byId(`view-${view}`).hidden = !active;
+    byId(`tab-${view}`).classList.toggle("is-active", active);
+    byId(`tab-${view}`).setAttribute("aria-selected", String(active));
+  }
+}
+
+byId("tab-autofill").addEventListener("click", () => showView("autofill"));
+byId("tab-tailor").addEventListener("click", () => showView("tailor"));
+
+// ------------------------------------------------------------------------------------
+// profile storage
+// ------------------------------------------------------------------------------------
+
+async function loadProfile() {
+  const stored = await chrome.storage.local.get(JMEProfile.STORAGE_KEY);
+  profile = JMEProfile.normalize(stored[JMEProfile.STORAGE_KEY]);
+  renderProfileSummary();
+  byId("overwrite-toggle").checked = profile.preferences.overwrite;
+  byId("voluntary-toggle").checked = profile.preferences.fillVoluntary;
+  return profile;
+}
+
+async function saveProfile(next) {
+  profile = JMEProfile.normalize(next);
+  await chrome.storage.local.set({ [JMEProfile.STORAGE_KEY]: profile });
+  renderProfileSummary();
+}
+
+function renderProfileSummary() {
+  const target = byId("profile-summary");
+  if (!JMEProfile.isUsable(profile)) {
+    target.innerHTML = "No profile saved yet. <strong>Edit profile</strong> to add your name, contact details, and history.";
+    updateFillButton();
+    return;
+  }
+  const name = `${profile.personal.firstName} ${profile.personal.lastName}`.trim();
+  const bits = [
+    `${profile.work.length} job${profile.work.length === 1 ? "" : "s"}`,
+    `${profile.education.length} school${profile.education.length === 1 ? "" : "s"}`,
+    `${profile.skills.length} skill${profile.skills.length === 1 ? "" : "s"}`,
+    profile.documents.resume ? `resume: ${profile.documents.resume.name}` : "no resume attached",
+  ];
+  target.innerHTML = `<strong>${escapeHTML(name)}</strong> · ${escapeHTML(profile.personal.email)}<br>${escapeHTML(bits.join(" · "))}`;
+  updateFillButton();
+}
+
+byId("edit-profile").addEventListener("click", () => chrome.runtime.openOptionsPage());
+
+byId("overwrite-toggle").addEventListener("change", async (event) => {
+  await saveProfile({ ...profile, preferences: { ...profile.preferences, overwrite: event.target.checked } });
+});
+
+byId("voluntary-toggle").addEventListener("change", async (event) => {
+  await saveProfile({ ...profile, preferences: { ...profile.preferences, fillVoluntary: event.target.checked } });
+  setFillStatus(
+    event.target.checked
+      ? "Voluntary disclosure answers will be filled from your profile."
+      : "Voluntary disclosure pages will be left blank for you."
+  );
+});
+
+byId("seed-profile").addEventListener("click", async () => {
+  setFillStatus("Reading your verified resume profile from the local backend...");
+  try {
+    const response = await fetch(`${API}/resume/profile`);
+    if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+    const resumeProfile = await response.json();
+    await saveProfile(JMEProfile.seedFromResumeProfile(profile, resumeProfile));
+    setFillStatus("Imported your work history, education, and skills. Empty fields were left for you to fill in.");
+  } catch (error) {
+    setFillStatus(`Import failed: ${error.message}. Start JME on port 8002 first.`, true);
+  }
+});
+
+// ------------------------------------------------------------------------------------
+// autofill
+// ------------------------------------------------------------------------------------
+
+function setFillStatus(message, error = false) {
+  byId("fill-status").textContent = message;
+  byId("fill-status").classList.toggle("error", error);
+}
+
+async function activeTab() {
+  const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+  return tab || null;
+}
+
+const isWorkdayUrl = (url) => /^https?:\/\/[^/]*(myworkdayjobs\.com|myworkdaysite\.com|workday\.com)/i.test(url || "");
+
+/**
+ * Ask the current tab whether the autofill engine is loaded there.
+ *
+ * The content script is declared for Workday hosts, but a tab that was already open when
+ * the extension was installed or reloaded has no script in it until the page reloads, so
+ * a failed ping is a normal state rather than an error.
+ *
+ * `keepStatus` is set when this runs straight after a fill: the report line is the most
+ * useful thing on screen at that moment and must not be overwritten by a ready message.
+ */
+async function refreshPageState({ keepStatus = false } = {}) {
+  const tab = await activeTab();
+  const dot = byId("page-dot");
+  const label = byId("page-label");
+  const status = (message) => {
+    if (!keepStatus) setFillStatus(message);
+  };
+
+  if (!tab || !/^https?:/.test(tab.url || "")) {
+    dot.className = "page-dot away";
+    label.textContent = "Open a Workday application tab.";
+    updateFillButton({ keepStatus });
+    return;
+  }
+  if (!isWorkdayUrl(tab.url)) {
+    dot.className = "page-dot away";
+    label.textContent = "This tab is not a Workday application.";
+    status("Autofill runs on *.myworkdayjobs.com and Workday-hosted application pages.");
+    updateFillButton({ keepStatus });
+    return;
+  }
+
+  try {
+    const response = await chrome.tabs.sendMessage(tab.id, { type: "jme-autofill-ping" });
+    dot.className = "page-dot ready";
+    label.textContent = `Workday · ${response?.step || "application"}`;
+    status("Ready. Fill this page, review it, then press Next yourself.");
+  } catch {
+    dot.className = "page-dot";
+    label.textContent = "Workday tab found, engine not loaded yet.";
+    status("Press Fill and the engine will be injected into this tab.");
+  }
+  updateFillButton({ keepStatus });
+}
+
+function updateFillButton({ keepStatus = false } = {}) {
+  const usable = JMEProfile.isUsable(profile);
+  byId("fill").disabled = !usable;
+  if (!usable && !keepStatus) {
+    setFillStatus("Add your name and email under Edit profile before the first fill.");
+  }
+}
+
+/** Load the engine into a tab that predates the install, then retry the message. */
+async function injectEngine(tabId) {
+  await chrome.scripting.executeScript({ target: { tabId }, files: AUTOFILL_SCRIPTS });
+}
+
+byId("fill").addEventListener("click", async () => {
+  const button = byId("fill");
+  const tab = await activeTab();
+  if (!tab?.id) {
+    setFillStatus("No active tab to fill.", true);
+    return;
+  }
+  button.disabled = true;
+  button.firstElementChild.textContent = "Filling...";
+  setFillStatus("Reading the form and filling what matches your profile...");
+  try {
+    let report;
+    try {
+      report = await chrome.tabs.sendMessage(tab.id, { type: "jme-autofill-run" });
+    } catch {
+      await injectEngine(tab.id);
+      report = await chrome.tabs.sendMessage(tab.id, { type: "jme-autofill-run" });
+    }
+    renderReport(report);
+  } catch (error) {
+    setFillStatus(`Fill failed: ${error.message}`, true);
+  } finally {
+    button.firstElementChild.textContent = "Fill this page";
+    refreshPageState({ keepStatus: true });
+  }
+});
+
+function renderReport(report) {
+  const container = byId("fill-report");
+  if (!report || report.error) {
+    container.hidden = true;
+    setFillStatus(report?.error || "The page did not respond.", true);
+    return;
+  }
+  container.hidden = false;
+  byId("report-step").textContent = report.step;
+  byId("report-count").textContent = `${report.filled.length} filled`;
+  byId("report-filled").innerHTML = report.filled.length
+    ? report.filled.map((item) =>
+        `<li>${escapeHTML(item.field)} <span>${escapeHTML(item.detail)}</span></li>`).join("")
+    : "<li><span>Nothing on this page matched your profile.</span></li>";
+
+  const issues = [
+    ...report.skipped.map((item) => `${item.field}: ${item.reason}`),
+    ...report.warnings,
+  ];
+  byId("report-issues").hidden = !issues.length;
+  byId("report-skipped").innerHTML = issues.map((line) => `<li>${escapeHTML(line)}</li>`).join("");
+
+  setFillStatus(
+    report.filled.length
+      ? `${report.filled.length} field${report.filled.length === 1 ? "" : "s"} filled on ${report.step}. Review, then press Next yourself.`
+      : "No matching fields here. Move to the next step and fill again."
+  );
+}
+
+// ------------------------------------------------------------------------------------
+// resume tailoring
+// ------------------------------------------------------------------------------------
 
 function updateCount() {
   const length = byId("job-description").value.length;
@@ -118,6 +344,7 @@ function renderResume(data) {
   }
   if (currentPdfUrl) URL.revokeObjectURL(currentPdfUrl);
   currentPdfUrl = "";
+  currentPdfBase64 = data.pdf_base64 || "";
   const pdfFrame = byId("resume-pdf");
   const textPreview = byId("resume");
   const pdfButton = byId("download-pdf");
@@ -137,6 +364,7 @@ function renderResume(data) {
     pdfButton.disabled = true;
     byId("edit-note").textContent = `${evidenceNote} ${data.pdf_error || "The LaTeX PDF preview is unavailable."}`;
   }
+  byId("use-for-autofill").disabled = !currentPdfBase64;
   byId("result").hidden = false;
   byId("result").scrollIntoView({ behavior: "smooth", block: "start" });
 }
@@ -228,8 +456,41 @@ byId("download-pdf").addEventListener("click", () => {
   setStatus("Downloaded the locally compiled Jake-template PDF.");
 });
 
-window.addEventListener("focus", checkServer);
-document.addEventListener("visibilitychange", () => {
-  if (!document.hidden) checkServer();
+// The one bridge between the two halves of the extension: the resume the tailor just
+// compiled becomes the file the autofill engine attaches on the next application.
+byId("use-for-autofill").addEventListener("click", async () => {
+  if (!currentPdfBase64) return;
+  const company = byId("job-company").value.trim().replace(/[^\w-]+/g, "_");
+  const name = company ? `Resume_${company}.pdf` : "Resume.pdf";
+  await saveProfile({
+    ...profile,
+    documents: {
+      resume: {
+        name,
+        mimeType: "application/pdf",
+        base64: currentPdfBase64,
+        savedAt: new Date().toISOString(),
+      },
+    },
+  });
+  setStatus(`Saved as ${name}. Autofill will attach it on the next Workday application.`);
 });
-checkServer();
+
+// ------------------------------------------------------------------------------------
+// startup
+// ------------------------------------------------------------------------------------
+
+async function refreshAll() {
+  await loadProfile();
+  await Promise.all([checkServer(), refreshPageState()]);
+}
+
+chrome.tabs.onActivated.addListener(refreshPageState);
+chrome.tabs.onUpdated.addListener((_tabId, changeInfo) => {
+  if (changeInfo.status === "complete") refreshPageState();
+});
+window.addEventListener("focus", refreshAll);
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden) refreshAll();
+});
+refreshAll();

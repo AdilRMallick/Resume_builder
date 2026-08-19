@@ -99,3 +99,32 @@ footer { padding: 14px 18px; border-top: 1px solid var(--line); color: var(--mut
 code { font-family: ui-monospace, monospace; }
 
 @media (max-width: 370px) { .target-grid { grid-template-columns: 1fr; } }
+
+/* ---- tabs ------------------------------------------------------------------- */
+.tabs { display: flex; gap: 4px; padding: 10px 16px 0; border-bottom: 1px solid var(--line); }
+.tab { padding: 8px 13px; border: 0; border-bottom: 2px solid transparent; color: var(--muted); background: none; cursor: pointer; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.tab:hover { color: var(--text); }
+.tab.is-active { border-bottom-color: var(--accent); color: var(--text); }
+
+/* ---- autofill --------------------------------------------------------------- */
+.page-state { display: flex; align-items: center; gap: 8px; margin-bottom: 13px; color: var(--muted); font-size: 10px; }
+.page-dot { width: 8px; height: 8px; flex: 0 0 auto; border-radius: 50%; background: var(--muted); }
+.page-dot.ready { background: var(--good); box-shadow: 0 0 0 4px rgba(110, 231, 162, 0.1); }
+.page-dot.away { background: var(--bad); box-shadow: 0 0 0 4px rgba(255, 131, 147, 0.1); }
+
+.fill-report { margin-top: 14px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel-strong); }
+.report-heading { display: flex; align-items: center; justify-content: space-between; gap: 9px; margin-bottom: 8px; }
+.report-heading .eyebrow { margin: 0; }
+.report-list { margin: 0; padding-left: 15px; font-size: 10px; }
+.report-list li { margin: 2px 0; }
+.report-list li span { color: var(--muted); }
+.report-list.muted li { color: var(--muted); }
+.report-details { margin-top: 9px; }
+.report-details summary { color: var(--muted); cursor: pointer; font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase; }
+.report-details[open] summary { margin-bottom: 6px; }
+
+.profile-summary { padding: 11px; border: 1px solid var(--line); border-radius: 10px; color: var(--muted); background: var(--bg); font-size: 10px; }
+.profile-summary strong { color: var(--text); }
+
+.toggle { display: flex; align-items: flex-start; gap: 8px; margin-top: 11px; color: var(--muted); font-size: 9px; font-weight: 500; letter-spacing: normal; text-transform: none; cursor: pointer; }
+.toggle input { width: 14px; height: 14px; flex: 0 0 auto; margin: 0; accent-color: var(--accent); }
